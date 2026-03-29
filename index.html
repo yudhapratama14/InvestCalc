@@ -1,0 +1,2449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>InvestCalc — by Yudha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden;width:100%;-webkit-text-size-adjust:100%}
+:root{
+  /* Stockbit-inspired: deep navy, bright accents */
+  --bg:#0B0E17;--card:#131722;--card2:#1A1F2E;--card3:#222840;
+  --t1:#E8ECF4;--t2:#8892A4;--t3:#4A5568;--t4:#2D3748;
+  --sep:rgba(255,255,255,.06);--sep2:rgba(255,255,255,.04);--fill:rgba(255,255,255,.05);
+  --blue:#4B9EFF;--blue-r:75,158,255;--blue-d:rgba(75,158,255,.1);
+  --green:#00C48C;--green-r:0,196,140;--green-d:rgba(0,196,140,.1);
+  --orange:#FF8C42;--orange-r:255,140,66;--orange-d:rgba(255,140,66,.1);
+  --red:#FF4560;--red-r:255,69,96;--red-d:rgba(255,69,96,.1);
+  --teal:#00D4E0;--teal-r:0,212,224;--teal-d:rgba(0,212,224,.1);
+  --purple:#A78BFA;--purple-r:167,139,250;--purple-d:rgba(167,139,250,.1);
+  --gold:#FFD166;--gold-r:255,209,102;--gold-d:rgba(255,209,102,.1);
+  --acc:var(--blue);--acc-r:var(--blue-r);--acc-d:var(--blue-d);
+  --r:10px;--rl:14px;--rxl:18px;--p:16px;
+  --sh:0 1px 3px rgba(0,0,0,.4);
+  --sh2:0 4px 20px rgba(0,0,0,.5);
+  --sh3:0 8px 32px rgba(0,0,0,.6);
+  --nav-h:60px;
+  --border:1px solid var(--sep);
+}
+/* LIGHT MODE — clean, Stockbit-like */
+[data-light]{
+  --bg:#F0F2F5;--card:#FFFFFF;--card2:#F7F8FA;--card3:#EEF0F3;
+  --t1:#0F1923;--t2:#5A6478;--t3:#A0AABB;--t4:#C8D0DC;
+  --sep:rgba(0,0,0,.07);--sep2:rgba(0,0,0,.045);--fill:rgba(0,0,0,.04);
+  --blue:#1A6EFF;--blue-r:26,110,255;--blue-d:rgba(26,110,255,.08);
+  --green:#00A870;--green-r:0,168,112;--green-d:rgba(0,168,112,.08);
+  --orange:#E06400;--orange-r:224,100,0;--orange-d:rgba(224,100,0,.08);
+  --red:#E0142C;--red-r:224,20,44;--red-d:rgba(224,20,44,.08);
+  --teal:#007B8F;--teal-r:0,123,143;--teal-d:rgba(0,123,143,.08);
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 20px rgba(0,0,0,.08);
+  --sh3:0 8px 32px rgba(0,0,0,.12);
+}
+body{font-family:'Plus Jakarta Sans',-apple-system,sans-serif;background:var(--bg);color:var(--t1);min-height:100dvh;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+
+/* ── APP SHELL ── */
+.app-shell{max-width:480px;margin:0 auto;min-height:100dvh;position:relative}
+.page{display:none;padding-bottom:calc(var(--nav-h) + 24px + env(safe-area-inset-bottom,0px))}
+.page.active{display:block}
+
+/* ── HEADER ── */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px var(--p) 10px;
+  background:rgba(11,14,23,.92);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--sep);
+  position:sticky;top:0;z-index:100;
+}
+[data-light] .hdr{background:rgba(240,242,245,.94)}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-ico{
+  width:28px;height:28px;border-radius:7px;
+  background:linear-gradient(135deg,#4B9EFF,#00C48C);
+  display:grid;place-items:center;font-size:13px;flex-shrink:0;
+}
+.logo-name{font-size:.875rem;font-weight:800;letter-spacing:-.02em;color:var(--t1)}
+.logo-sub{font-size:.55rem;color:var(--t3);font-weight:500;margin-top:.5px}
+.hdr-right{display:flex;align-items:center;gap:5px}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;border:none;
+  background:var(--fill);cursor:pointer;display:grid;place-items:center;
+  font-size:.82rem;-webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;transition:opacity .15s,transform .1s,background .15s;
+  color:var(--t2);
+}
+.icon-btn:active{opacity:.5;transform:scale(.88)}
+.icon-btn:hover{background:var(--card2)}
+
+/* ── DATA BAR ── */
+.data-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px var(--p);background:var(--card);
+  border-bottom:1px solid var(--sep);
+  font-size:.6rem;color:var(--t3);gap:8px;
+}
+.data-bar-left{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.data-status{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;font-size:.6rem}
+.data-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.data-dot.live{background:var(--green);animation:pulse 2s infinite}
+.data-dot.offline{background:var(--t3)}
+.data-dot.loading{background:var(--orange);animation:pulse2 .8s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pulse2{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* ── PROFILE BAR ── */
+.profile-bar{display:flex;align-items:center;gap:10px;padding:9px var(--p);background:var(--card2);border-bottom:1px solid var(--sep);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.profile-bar:active{background:var(--card3)}
+.profile-bar.hidden{display:none}
+.pb-icon{font-size:1.1rem;flex-shrink:0}
+.pb-info{flex:1;min-width:0}
+.pb-name{font-size:.75rem;font-weight:700;color:var(--t1)}
+.pb-rec{font-size:.62rem;color:var(--t2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pb-edit{font-size:.6rem;color:var(--acc);font-weight:700;flex-shrink:0;padding:3px 8px;background:var(--acc-d);border-radius:6px}
+
+/* ── BOTTOM NAV ── */
+.nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;z-index:200;
+  background:rgba(13,17,28,.96);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border-top:1px solid var(--sep);
+  display:grid;grid-template-columns:repeat(4,1fr);
+  padding:0 4px calc(env(safe-area-inset-bottom,0px));
+  height:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));
+  align-items:start;
+}
+[data-light] .nav{background:rgba(240,242,245,.97)}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:10px 4px 6px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;border:none;background:none;
+  transition:opacity .15s;position:relative;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.nav-item:active{opacity:.55}
+.nav-ico{font-size:1.15rem;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.nav-lbl{font-size:.55rem;font-weight:600;color:var(--t3);transition:color .2s;letter-spacing:.01em}
+.nav-item.active .nav-ico{transform:scale(1.1)}
+.nav-item.active .nav-lbl{color:var(--acc)}
+.nav-dot{width:3px;height:3px;border-radius:50%;background:var(--acc);position:absolute;bottom:4px;opacity:0;transition:opacity .2s}
+.nav-item.active .nav-dot{opacity:1}
+
+/* ── BOTTOM TICKER ── */
+.bot{
+  position:fixed;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));
+  left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;z-index:150;
+  background:rgba(13,17,28,.96);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--sep);
+  padding:7px 16px;display:flex;align-items:center;gap:10px;
+}
+[data-light] .bot{background:rgba(240,242,245,.97)}
+.bot-left{flex:1;min-width:0}
+.bot-prod{font-size:.59rem;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.bot-amt{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;color:var(--t1);line-height:1.2;font-variant-numeric:tabular-nums}
+.pill{
+  display:inline-flex;align-items:center;gap:3px;
+  font-family:'JetBrains Mono',monospace;font-size:.61rem;font-weight:600;
+  padding:3px 9px;border-radius:6px;margin-bottom:0;
+  transition:all .3s;flex-shrink:0;
+}
+.pill.pos{background:rgba(0,196,140,.15);color:var(--green)}
+.pill.neg{background:rgba(255,69,96,.15);color:var(--red)}
+
+/* ── LAYOUT ── */
+.sec{padding:16px var(--p) 0}
+.sec-lbl{font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:9px}
+.gap{height:8px}
+.card{background:var(--card);border-radius:var(--rl);border:var(--border);overflow:hidden}
+
+/* ── SLIDER GROUP ── */
+.sg{padding:12px var(--p)}
+.sg+.sg{border-top:1px solid var(--sep)}
+.sg-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.sg-lbl{font-size:.79rem;font-weight:600;color:var(--t1)}
+.sg-val{font-family:'JetBrains Mono',monospace;font-size:.69rem;font-weight:600;color:var(--acc);background:var(--acc-d);padding:3px 9px;border-radius:6px;transition:background .2s;font-variant-numeric:tabular-nums}
+.sg-val.flash{background:rgba(var(--acc-r),.25)}
+.sg-lims{display:flex;justify-content:space-between;font-size:.55rem;color:var(--t4);font-family:'JetBrains Mono',monospace;margin-top:3px}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:transparent;outline:none;cursor:pointer;touch-action:pan-y;margin:5px 0 2px}
+input[type=range]::-webkit-slider-runnable-track{height:2px;border-radius:2px;background:linear-gradient(to right,var(--acc) var(--pct,0%),var(--fill) var(--pct,0%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--acc);margin-top:-9px;box-shadow:0 0 0 4px rgba(var(--acc-r),.15);transition:transform .1s,box-shadow .1s}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 0 0 6px rgba(var(--acc-r),.2)}
+
+/* ── TOGGLE ── */
+.trow{display:flex;align-items:center;gap:12px;padding:12px var(--p);min-height:52px}
+.trow+.trow{border-top:1px solid var(--sep)}
+.tr-info{flex:1;min-width:0}
+.tr-n{font-size:.79rem;font-weight:600;color:var(--t1);line-height:1.3;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tr-s{font-size:.63rem;color:var(--t2);margin-top:2px;line-height:1.45}
+.tr-info-btn{font-size:.57rem;color:var(--acc);font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:2px 7px;background:var(--acc-d);border-radius:5px;flex-shrink:0}
+.tog{position:relative;width:42px;height:24px;cursor:pointer;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.tog input{opacity:0;width:0;height:0;position:absolute}
+.tk{position:absolute;inset:0;border-radius:24px;background:var(--card3);transition:.24s cubic-bezier(.25,.46,.45,.94)}
+.tk::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:var(--t3);transition:.24s cubic-bezier(.25,.46,.45,.94)}
+.tog input:checked+.tk{background:var(--green)}
+.tog input:checked+.tk::before{transform:translateX(18px);background:#fff}
+.coll{max-height:0;overflow:hidden;transition:max-height .3s cubic-bezier(.25,.46,.45,.94)}
+.coll.open{max-height:280px}
+.coll-inner{padding:4px var(--p) 12px;border-top:1px solid var(--sep)}
+
+/* ── CAT CHIPS ── */
+.cat-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:8px;border:var(--border);cursor:pointer;background:var(--card);color:var(--t2);font-family:'Plus Jakarta Sans',sans-serif;font-size:.72rem;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .18s;flex-shrink:0}
+.cat-chip.on{background:var(--acc-d);color:var(--acc);border-color:rgba(var(--acc-r),.3)}
+
+/* ── EXPLAINER ── */
+.explainer{background:var(--card);border-radius:var(--rl);padding:14px;margin:10px var(--p) 0;border:var(--border)}
+.exp-head{font-size:.77rem;font-weight:700;color:var(--t1);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.exp-coretax{font-size:.53rem;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0}
+.exp-coretax.auto{background:var(--green-d);color:var(--green)}
+.exp-coretax.lapor{background:var(--orange-d);color:var(--orange)}
+.exp-coretax.bebas{background:var(--teal-d);color:var(--teal)}
+.exp-analogy{font-size:.73rem;color:var(--t1);line-height:1.7;margin-bottom:9px;padding:10px 12px;background:var(--card2);border-radius:var(--r);border-left:2px solid var(--acc)}
+.exp-example{font-size:.7rem;color:var(--t2);line-height:1.65;margin-bottom:9px;padding:9px 11px;background:rgba(var(--acc-r),.04);border-radius:var(--r);border:1px dashed rgba(var(--acc-r),.18)}
+.exp-example strong{color:var(--acc)}
+.exp-tags{display:flex;gap:5px;flex-wrap:wrap}
+.exp-tag{font-size:.55rem;font-weight:700;padding:2px 7px;border-radius:5px}
+.sbn-embed{margin-top:11px;border-top:1px solid var(--sep);padding-top:11px}
+.sbn-embed-ttl{font-size:.57rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:9px}
+.sbn-row{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--sep)}
+.sbn-row:last-child{border-bottom:none;padding-bottom:0}
+.sbn-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.sbn-dot.aktif{background:var(--green);box-shadow:0 0 0 3px rgba(0,196,140,.2)}
+.sbn-dot.upcoming{background:var(--t4)}
+.sbn-info{flex:1;min-width:0}
+.sbn-name{font-size:.74rem;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.sbn-sub{font-size:.61rem;color:var(--t2);margin-top:2px;line-height:1.45}
+.sbn-right{text-align:right;flex-shrink:0}
+.sbn-days{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600}
+.sbn-days.aktif{color:var(--green)}.sbn-days.upcoming{color:var(--t3)}
+.sbn-rate{font-size:.6rem;color:var(--acc);font-weight:500;margin-top:2px}
+.badge{font-size:.49rem;font-weight:700;padding:1px 5px;border-radius:4px;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
+.b-sbn{background:rgba(0,196,140,.12);color:var(--green)}
+.b-sya{background:var(--teal-d);color:var(--teal)}
+.b-hot{background:rgba(255,140,66,.12);color:var(--orange)}
+
+/* ── PRODUCT GRID ── */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px var(--p) 0}
+.pc{border-radius:var(--r);padding:12px 13px;cursor:pointer;border:1px solid var(--sep);background:var(--card);transition:all .16s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pc:active{opacity:.7}
+.pc.sel{border-color:rgba(var(--c-rgb),.4);background:rgba(var(--c-rgb),.07)}
+.pc-name{font-size:.77rem;font-weight:700;color:var(--t1);margin-bottom:3px}
+.pc-rate{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;margin-bottom:4px}
+.pc-meta{display:flex;align-items:center;gap:4px;font-size:.57rem;color:var(--t3)}
+.pc-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* ── SALARY CARD ── */
+.salary-card{background:var(--card);border-radius:var(--rl);overflow:hidden;margin:14px var(--p) 0;border:var(--border)}
+.salary-header{padding:14px var(--p) 12px;border-bottom:1px solid var(--sep)}
+.sal-hed-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.sal-hed-title{font-size:.82rem;font-weight:700;color:var(--t1)}
+.salary-breakdown{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:10px var(--p)}
+.sb-item{padding:10px 9px;border-radius:var(--r);border:1px solid var(--sep);text-align:center;background:var(--card2)}
+.sb-item.highlight{background:rgba(var(--acc-r),.06);border-color:rgba(var(--acc-r),.2)}
+.sb-pct{font-size:.55rem;font-weight:700;color:var(--t3);margin-bottom:3px;letter-spacing:.04em;text-transform:uppercase}
+.sb-amt{font-family:'JetBrains Mono',monospace;font-size:.74rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.sb-lbl{font-size:.53rem;color:var(--t3);margin-top:3px;line-height:1.3}
+.salary-btns{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:2px var(--p) 12px}
+.sal-btn{border:none;border-radius:var(--r);padding:11px 7px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.71rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s;line-height:1.3;text-align:center}
+.sal-btn:active{opacity:.65}
+.sal-btn-main{background:var(--acc);color:#fff}
+.sal-btn-suggest{background:var(--green-d);color:var(--green);border:1px solid rgba(0,196,140,.2)}
+
+/* ── HERO RESULT ── */
+.hero{background:var(--card);border-radius:var(--rl);padding:18px;border:var(--border);margin:14px var(--p) 0;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(var(--acc-r),.07) 0%,transparent 65%);pointer-events:none}
+.hero-tag{font-size:.55rem;font-weight:700;color:var(--acc);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.hero-prod{font-size:.72rem;font-weight:500;color:var(--t2);margin-bottom:3px;line-height:1.4}
+.hero-amt{font-size:2.2rem;font-weight:800;letter-spacing:-.04em;color:var(--t1);line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.hero-real{font-size:.65rem;color:var(--t2);margin-bottom:9px;display:none}
+.hero-real.on{display:block}
+.hero-sep{height:1px;background:var(--sep);margin:0 0 12px}
+.hero-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.hm-val{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;color:var(--t1);margin-bottom:2px;font-variant-numeric:tabular-nums}
+.hm-lbl{font-size:.54rem;color:var(--t3)}
+.hero-btns{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.hero-btn{border:none;border-radius:var(--r);padding:10px 7px;background:var(--card2);color:var(--t2);font-family:'Plus Jakarta Sans',sans-serif;font-size:.73rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s,background .15s;text-align:center;border:1px solid var(--sep)}
+.hero-btn:active{opacity:.65}
+.hero-btn:hover{background:var(--card3)}
+.hero-btn-primary{background:rgba(var(--acc-r),.1);color:var(--acc);border-color:rgba(var(--acc-r),.2)}
+
+/* ── INF BANNER ── */
+.inf-ban{background:var(--card);border-radius:var(--rl);border:1px solid rgba(var(--orange-r),.15);padding:13px;margin:9px var(--p) 0}
+.ib-top{display:flex;align-items:flex-start;gap:9px}
+.ib-ico{font-size:.88rem;flex-shrink:0;margin-top:1px}
+.ib-body{flex:1;min-width:0}
+.ib-ttl{font-size:.74rem;font-weight:700;color:var(--orange)}
+.ib-sub{font-size:.64rem;color:var(--t2);margin-top:2px;line-height:1.5}
+.inf-pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.ip{font-family:'JetBrains Mono',monospace;font-size:.61rem;font-weight:600;padding:3px 9px;border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .18s}
+.ip.on{background:var(--orange);color:#fff}
+.ip:not(.on){background:var(--orange-d);color:var(--orange);border:1px solid rgba(var(--orange-r),.2)}
+
+/* ── RESULT CARDS ── */
+.rcard{background:var(--card);border-radius:var(--rl);border:var(--border);padding:14px var(--p);margin:9px var(--p) 0}
+.rc-ttl{font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+.vs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.vs-col{padding:11px 9px;border-radius:var(--r);border:1px solid var(--sep);background:var(--card2)}
+.vs-col.win{border-color:rgba(var(--green-r),.25);background:var(--green-d)}
+.vs-col.los{border-color:rgba(var(--red-r),.2);background:var(--red-d)}
+.vs-col.neu{background:var(--orange-d);border-color:rgba(var(--orange-r),.2)}
+.vs-lbl{font-size:.53rem;font-weight:700;color:var(--t3);margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase}
+.vs-val{font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600;margin-bottom:2px;font-variant-numeric:tabular-nums}
+.vs-sub{font-size:.57rem;color:var(--t2);line-height:1.3}
+.verdict{margin-top:9px;font-size:.7rem;line-height:1.6;padding:9px 11px;background:var(--card2);border-radius:var(--r);color:var(--t1)}
+.stats2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px var(--p) 0}
+.scard{background:var(--card);border-radius:var(--r);padding:13px;border:var(--border)}
+.s-lbl{font-size:.55rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.s-val{font-family:'JetBrains Mono',monospace;font-size:.86rem;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums}
+
+/* ── CHART ── */
+.ch-wrap{margin-top:9px}
+.ch-toggle{display:flex;gap:5px;justify-content:flex-end;margin-bottom:7px}
+.ct-btn{padding:4px 11px;border-radius:7px;border:1px solid var(--sep);background:var(--card2);color:var(--t2);font-family:'Plus Jakarta Sans',sans-serif;font-size:.65rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .18s}
+.ct-btn.on{background:var(--acc-d);border-color:rgba(var(--acc-r),.3);color:var(--acc)}
+.ch-box{height:170px;position:relative}
+
+/* ── INSIGHT ── */
+.ins-body{display:flex;flex-direction:column;gap:7px}
+.ins-item{display:flex;gap:9px;font-size:.72rem;color:var(--t1);line-height:1.6}
+.ins-dot{width:5px;height:5px;border-radius:50%;background:var(--acc);flex-shrink:0;margin-top:6px}
+.vibe-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:11px}
+.vg-wrap{position:relative;width:56px;height:56px;flex-shrink:0}
+.vg-svg{width:56px;height:56px;transform:rotate(-90deg)}
+.vg-track{fill:none;stroke:var(--card2);stroke-width:4}
+.vg-prog{fill:none;stroke-width:4;stroke-linecap:round;stroke-dasharray:150;stroke-dashoffset:150;transition:stroke-dashoffset .9s cubic-bezier(.34,1.56,.64,1),stroke .4s}
+.vg-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:.76rem;font-weight:600;color:var(--t1)}
+.vb-info{flex:1;min-width:0}
+.vb-emoji{font-size:1.25rem;display:block;margin-bottom:2px}
+.vb-verdict{font-size:.79rem;font-weight:700;color:var(--t1);line-height:1.3;margin-bottom:2px}
+.vb-sub{font-size:.67rem;color:var(--t2);line-height:1.45}
+.vb-checks{display:flex;flex-direction:column;gap:6px}
+.vc-row{display:flex;align-items:flex-start;gap:8px;font-size:.7rem;color:var(--t1);line-height:1.4}
+.vc-dot{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:.55rem;font-weight:700;flex-shrink:0;margin-top:1px}
+.vc-ok{background:var(--green-d);color:var(--green)}.vc-warn{background:var(--orange-d);color:var(--orange)}.vc-bad{background:var(--red-d);color:var(--red)}
+
+/* ── KASUR / ANALOGI ── */
+.kasur-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}
+.kasur-col{border-radius:var(--r);padding:13px;border:1px solid var(--sep)}
+.kasur-inv{background:rgba(var(--acc-r),.04);border-color:rgba(var(--acc-r),.15)}
+.kasur-cash{background:var(--red-d);border-color:rgba(var(--red-r),.2)}
+.k-ico{font-size:1rem;margin-bottom:3px}.k-name{font-size:.62rem;font-weight:700;color:var(--t2);margin-bottom:3px}
+.k-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;font-variant-numeric:tabular-nums}
+.k-pct{font-size:.59rem;color:var(--t2);margin-top:2px}
+.ana-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.ana-item{display:flex;align-items:center;gap:8px;background:var(--card2);border-radius:var(--r);padding:10px 11px;border:1px solid var(--sep)}
+.ana-e{font-size:1.1rem;flex-shrink:0}
+.ana-c{font-family:'JetBrains Mono',monospace;font-size:.79rem;font-weight:600;color:var(--acc)}
+.ana-l{font-size:.59rem;color:var(--t2);margin-top:1px}
+
+/* ── ZAKAT ── */
+.zakat-types{display:flex;flex-direction:column;gap:7px;margin-bottom:11px}
+.zakat-type-item{padding:11px 13px;background:var(--card2);border-radius:var(--r);border:1px solid var(--sep)}
+.zt-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:6px}
+.zt-name{font-size:.75rem;font-weight:700;color:var(--t1)}
+.zt-amt{font-family:'JetBrains Mono',monospace;font-size:.79rem;font-weight:600;color:var(--teal);flex-shrink:0}
+.zt-desc{font-size:.64rem;color:var(--t2);line-height:1.5}
+.zakat-nisab{padding:10px 12px;background:var(--teal-d);border-radius:var(--r);border:1px solid rgba(var(--teal-r),.2);font-size:.67rem;color:var(--t2);line-height:1.55;margin-bottom:9px}
+.zakat-nisab strong{color:var(--teal)}
+.zakat-ayat{padding:13px;background:rgba(var(--gold-r),.05);border:1px solid rgba(var(--gold-r),.15);border-radius:var(--r);margin-bottom:9px}
+.zakat-ayat-ar{font-size:.84rem;color:var(--t1);line-height:1.9;text-align:right;direction:rtl;margin-bottom:5px;font-weight:600}
+.zakat-ayat-tr{font-size:.64rem;color:var(--t2);line-height:1.6;font-style:italic;margin-bottom:3px}
+.zakat-ayat-src{font-size:.55rem;color:var(--gold);font-weight:700}
+.zakat-why{padding:10px 12px;background:var(--gold-d);border:1px solid rgba(var(--gold-r),.15);border-radius:var(--r);font-size:.67rem;color:var(--t2);line-height:1.6;margin-bottom:9px}
+.zakat-why strong{color:var(--gold)}
+.zakat-lembaga{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:3px}
+.zakat-lem-chip{font-size:.65rem;font-weight:700;padding:4px 9px;border-radius:7px;background:var(--teal-d);color:var(--teal);border:1px solid rgba(var(--teal-r),.2);text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s;display:inline-block}
+.zakat-lem-chip:active{opacity:.7}
+
+/* ── CARA BELI ── */
+.cb-step{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.cb-num{width:22px;height:22px;border-radius:50%;background:var(--acc-d);color:var(--acc);font-size:.63rem;font-weight:700;display:grid;place-items:center;flex-shrink:0;margin-top:1px}
+.cb-text{font-size:.75rem;color:var(--t1);line-height:1.55;flex:1}
+.cb-apps{display:flex;gap:5px;flex-wrap:wrap;margin:2px 0 9px}
+.cb-app{font-size:.66rem;font-weight:700;padding:4px 9px;border-radius:7px;background:var(--acc-d);color:var(--acc)}
+.cb-warn{background:var(--orange-d);border:1px solid rgba(var(--orange-r),.2);border-radius:var(--r);padding:9px 12px;font-size:.68rem;color:var(--orange);line-height:1.5;margin-bottom:11px}
+
+/* ── TARGET ── */
+.target-row{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 6px;scrollbar-width:none}
+.target-row::-webkit-scrollbar{display:none}
+.tgt-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;border:1px solid var(--sep);background:var(--card);color:var(--t2);font-family:'Plus Jakarta Sans',sans-serif;font-size:.71rem;font-weight:600;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .18s;flex-shrink:0}
+.tgt-chip.on{background:var(--acc-d);color:var(--acc);border-color:rgba(var(--acc-r),.3)}
+.tgt-custom{width:100%;border:1px solid var(--sep);border-radius:10px;padding:9px 13px;background:var(--card2);color:var(--t1);font-family:'JetBrains Mono',monospace;font-size:.79rem;outline:none;margin-top:9px;transition:border-color .2s}
+.tgt-custom:focus{border-color:var(--acc)}
+.tgt-result{margin-top:13px;background:rgba(var(--acc-r),.06);border:1px solid rgba(var(--acc-r),.15);border-radius:var(--rl);padding:14px}
+.tgt-big{font-size:1.45rem;font-weight:800;letter-spacing:-.035em;color:var(--t1);margin-bottom:3px;font-variant-numeric:tabular-nums}
+.tgt-price-tag{font-size:.64rem;color:var(--acc);font-weight:600;background:var(--acc-d);padding:2px 7px;border-radius:5px;display:inline-block;margin-bottom:7px}
+.tgt-sub{font-size:.69rem;color:var(--t2);line-height:1.55}
+.tgt-alts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:11px}
+.tgt-alt{background:var(--card);border-radius:var(--r);padding:10px;border:1px solid var(--sep)}
+.tgt-alt-val{font-family:'JetBrains Mono',monospace;font-size:.79rem;font-weight:600;color:var(--acc);margin-bottom:2px}
+.tgt-alt-lbl{font-size:.59rem;color:var(--t3);line-height:1.3}
+
+/* ── TIMELINE ── */
+.timeline-scroll{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px var(--p) 10px;scrollbar-width:none;scroll-snap-type:x mandatory}
+.timeline-scroll::-webkit-scrollbar{display:none}
+.tl-card{flex-shrink:0;width:124px;border-radius:var(--rl);padding:13px 12px;background:var(--card);border:1px solid var(--sep);scroll-snap-align:start}
+.tl-year{font-size:.57rem;font-weight:700;color:var(--t3);letter-spacing:.06em;margin-bottom:2px}
+.tl-age{font-size:.64rem;font-weight:600;color:var(--t2);margin-bottom:7px}
+.tl-val{font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600;color:var(--t1);margin-bottom:3px;font-variant-numeric:tabular-nums}
+.tl-ico{font-size:.95rem;margin-bottom:2px;display:block}
+.tl-label{font-size:.61rem;color:var(--t2);line-height:1.3}
+
+/* ── SUGGEST ── */
+.sug-profile{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card2);border-radius:var(--r);margin-bottom:13px;border:1px solid var(--sep)}
+.sug-p-emoji{font-size:1.4rem;flex-shrink:0}
+.sug-p-info{flex:1;min-width:0}
+.sug-p-name{font-size:.77rem;font-weight:700;color:var(--t1)}
+.sug-p-sub{font-size:.63rem;color:var(--t2);margin-top:2px}
+.sug-alloc{display:flex;flex-direction:column;gap:6px;margin-bottom:11px}
+.sa-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:var(--r);border:1px solid var(--sep);background:var(--card2);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .16s}
+.sa-item:active{opacity:.7}
+.sa-pct{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;color:var(--acc);min-width:34px}
+.sa-info{flex:1;min-width:0}
+.sa-name{font-size:.75rem;font-weight:700;color:var(--t1)}
+.sa-rate{font-size:.62rem;color:var(--t2);margin-top:1px}
+.sa-amt{font-family:'JetBrains Mono',monospace;font-size:.73rem;font-weight:600;color:var(--t1)}
+.sug-blend{padding:13px;background:rgba(var(--acc-r),.05);border:1px solid rgba(var(--acc-r),.15);border-radius:var(--r);text-align:center;margin-bottom:11px}
+.sug-blend-rate{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:600;color:var(--acc)}
+.sug-blend-lbl{font-size:.62rem;color:var(--t2);margin-top:2px}
+.sug-cta{width:100%;border:none;border-radius:var(--r);padding:13px;background:var(--acc);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+.sug-cta:active{opacity:.8}
+
+/* ── OVERLAY ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding:0 0 env(safe-area-inset-bottom,0px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal-sheet{background:var(--card);border-radius:22px 22px 0 0;padding:20px var(--p) 28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;transform:translateY(24px);transition:transform .28s cubic-bezier(.25,.46,.45,.94);-webkit-overflow-scrolling:touch}
+.overlay.open .modal-sheet{transform:translateY(0)}
+.modal-handle{width:28px;height:3px;background:var(--t4);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:.97rem;font-weight:700;color:var(--t1);margin-bottom:13px;letter-spacing:-.02em}
+.modal-close{float:right;font-size:1rem;cursor:pointer;-webkit-tap-highlight-color:transparent;color:var(--t3);transition:color .15s;width:28px;height:28px;background:var(--card2);border-radius:50%;display:grid;place-items:center;margin-top:-2px}
+.modal-close:active{color:var(--t1)}
+
+/* ── FEAT GRID ── */
+.feat-grid-btn{border:1px solid var(--sep);border-radius:var(--rl);padding:14px 13px;background:var(--card);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;transition:all .16s;font-family:'Plus Jakarta Sans',sans-serif;display:flex;flex-direction:column;gap:3px}
+.feat-grid-btn:active{opacity:.65;transform:scale(.97)}
+.feat-grid-btn:hover{border-color:var(--fc);background:var(--fb)}
+
+/* ── TAX MODAL ── */
+.tax-block{margin-bottom:12px;padding:12px;background:var(--card2);border-radius:var(--r);border:1px solid var(--sep)}
+.tax-block-ttl{font-size:.75rem;font-weight:700;color:var(--t1);margin-bottom:4px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tax-block-reg{font-size:.59rem;font-weight:600;color:var(--acc);background:var(--acc-d);padding:2px 7px;border-radius:5px;display:inline-block;margin-bottom:6px}
+.tax-block-text{font-size:.7rem;color:var(--t2);line-height:1.6}
+.tax-block-ex{margin-top:6px;padding:8px 10px;background:var(--card);border-radius:var(--r);font-size:.67rem;color:var(--t2);line-height:1.6;font-style:italic}
+.tax-badge{font-size:.53rem;font-weight:700;padding:2px 6px;border-radius:4px}
+.tax-auto{background:var(--green-d);color:var(--green)}
+.tax-lapor{background:var(--orange-d);color:var(--orange)}
+.tax-bebas{background:var(--teal-d);color:var(--teal)}
+.coretax-banner{background:rgba(var(--blue-r),.06);border:1px solid rgba(var(--blue-r),.15);border-radius:var(--r);padding:13px;margin-bottom:13px}
+.ctb-title{font-size:.79rem;font-weight:700;color:var(--blue);margin-bottom:4px}
+.ctb-text{font-size:.68rem;color:var(--t2);line-height:1.6}
+.ctb-features{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.ctb-feat{font-size:.67rem;color:var(--t1);display:flex;align-items:flex-start;gap:5px;line-height:1.4}
+
+/* ── FIRE ── */
+.fire-result{background:rgba(var(--orange-r),.06);border:1px solid rgba(var(--orange-r),.2);border-radius:var(--rl);padding:16px;margin-top:13px}
+.fire-big{font-size:1.75rem;font-weight:800;letter-spacing:-.035em;color:var(--t1);margin-bottom:3px;font-variant-numeric:tabular-nums}
+.fire-sub{font-size:.69rem;color:var(--t2);margin-bottom:13px;line-height:1.45}
+.fire-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.fire-stat{background:var(--card);border-radius:var(--r);padding:10px;border:1px solid var(--sep)}
+.fire-stat-val{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:600;color:var(--orange);margin-bottom:2px;font-variant-numeric:tabular-nums}
+.fire-stat-lbl{font-size:.58rem;color:var(--t3);line-height:1.3}
+
+/* ── COMPARE ── */
+.compare-row{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.cmp-item{display:flex;align-items:center;gap:8px;padding:11px 12px;background:var(--card2);border-radius:var(--r);border:1px solid var(--sep);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .16s}
+.cmp-item:active{opacity:.7}
+.cmp-item.cmp-best{border-color:rgba(var(--green-r),.3);background:var(--green-d)}
+.cmp-rank{width:22px;height:22px;border-radius:50%;background:var(--card3);color:var(--t2);font-size:.67rem;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.cmp-rank.gold{background:rgba(var(--gold-r),.15);color:var(--gold)}
+.cmp-info{flex:1;min-width:0}
+.cmp-name{font-size:.77rem;font-weight:700;color:var(--t1)}
+.cmp-rate{font-size:.62rem;color:var(--t2);margin-top:1px}
+.cmp-bar-wrap{width:76px;flex-shrink:0}
+.cmp-bar{height:4px;border-radius:3px;margin-bottom:2px}
+.cmp-val{font-family:'JetBrains Mono',monospace;font-size:.69rem;font-weight:600;text-align:right}
+
+/* ── INFLASI CALC ── */
+.inf-calc-result{margin-top:13px;padding:14px;background:var(--red-d);border:1px solid rgba(var(--red-r),.2);border-radius:var(--r)}
+.inf-calc-big{font-family:'JetBrains Mono',monospace;font-size:1.45rem;font-weight:600;color:var(--red);margin-bottom:3px;font-variant-numeric:tabular-nums}
+.inf-calc-sub{font-size:.69rem;color:var(--t2);line-height:1.55}
+
+/* ── SKENARIO ── */
+.sken-grid{display:flex;flex-direction:column;gap:7px;margin-top:9px}
+.sken-item{padding:13px;border-radius:var(--r);border:1px solid var(--sep);background:var(--card2)}
+.sken-item.best{border-color:rgba(var(--green-r),.25);background:var(--green-d)}
+.sken-item.base{border-color:rgba(var(--acc-r),.2);background:var(--acc-d)}
+.sken-item.worst{border-color:rgba(var(--red-r),.2);background:var(--red-d)}
+.sken-label{font-size:.6rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.sken-val{font-family:'JetBrains Mono',monospace;font-size:1.08rem;font-weight:600;font-variant-numeric:tabular-nums}
+.sken-sub{font-size:.64rem;color:var(--t2);margin-top:2px}
+
+/* ── GLOSARIUM ── */
+.glo-search{width:100%;border:1px solid var(--sep);border-radius:10px;padding:10px 13px;background:var(--card2);color:var(--t1);font-family:'Plus Jakarta Sans',sans-serif;font-size:.79rem;outline:none;transition:border-color .2s;margin-bottom:13px}
+.glo-search:focus{border-color:var(--acc)}
+.glo-list{display:flex;flex-direction:column;gap:7px}
+.glo-item{padding:12px;background:var(--card2);border-radius:var(--r);border:1px solid var(--sep)}
+.glo-term{font-size:.81rem;font-weight:700;color:var(--t1);margin-bottom:4px}
+.glo-def{font-size:.7rem;color:var(--t2);line-height:1.6}
+.glo-ex{font-size:.64rem;color:var(--acc);margin-top:5px;font-style:italic}
+
+/* ── REBALANCE ── */
+.reb-alloc{display:flex;flex-direction:column;gap:7px;margin-bottom:13px}
+.reb-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card2);border-radius:var(--r);border:1px solid var(--sep)}
+.reb-name{font-size:.74rem;font-weight:700;color:var(--t1);flex:1}
+.reb-input{width:58px;border:1px solid var(--sep);border-radius:8px;padding:6px 8px;background:var(--card);color:var(--t1);font-family:'JetBrains Mono',monospace;font-size:.77rem;outline:none;text-align:right;transition:border-color .2s}
+.reb-input:focus{border-color:var(--acc)}
+.reb-pct{font-size:.67rem;color:var(--t2);width:18px;flex-shrink:0}
+.reb-result{margin-top:13px;display:flex;flex-direction:column;gap:6px}
+.reb-res-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:var(--r);border:1px solid var(--sep)}
+.reb-res-item.over{background:var(--red-d);border-color:rgba(var(--red-r),.2)}
+.reb-res-item.under{background:var(--green-d);border-color:rgba(var(--green-r),.2)}
+.reb-res-item.ok{background:var(--card2)}
+.reb-res-name{font-size:.74rem;font-weight:700;color:var(--t1)}
+.reb-res-action{font-size:.66rem;font-weight:600}
+
+/* ── NAB CALC ── */
+.nab-result{margin-top:13px;padding:14px;background:rgba(var(--green-r),.07);border:1px solid rgba(var(--green-r),.2);border-radius:var(--r)}
+.nab-big{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:600;color:var(--green);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.nab-sub{font-size:.69rem;color:var(--t2);line-height:1.6}
+
+/* ── ONBOARDING ── */
+.ob-overlay{position:fixed;inset:0;background:var(--bg);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--p) var(--p) calc(var(--p) + env(safe-area-inset-bottom,0px));opacity:1;transition:opacity .3s;overflow-y:auto}
+.ob-overlay.done{opacity:0;pointer-events:none}
+.ob-prof-card{width:100%;border:1px solid var(--sep);border-radius:16px;padding:16px;background:var(--card);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .18s;text-align:left}
+.ob-prof-card:active{opacity:.7}
+.ob-prof-card.sel{border-color:var(--acc);background:rgba(var(--acc-r),.05)}
+.ob-prof-top{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+.ob-prof-emoji{font-size:1.6rem;flex-shrink:0}
+.ob-prof-name{font-size:.91rem;font-weight:700;color:var(--t1);letter-spacing:-.02em}
+.ob-prof-tag{font-size:.57rem;font-weight:700;padding:2px 7px;border-radius:5px;margin-top:2px;display:inline-block}
+.ob-prof-desc{font-size:.72rem;color:var(--t2);line-height:1.6;margin-bottom:9px}
+.ob-prof-detail{font-size:.64rem;color:var(--t2);line-height:1.7;margin-bottom:9px}
+.ob-prof-instruments{display:flex;gap:5px;flex-wrap:wrap}
+.ob-prof-inst{font-size:.63rem;font-weight:600;padding:3px 9px;border-radius:7px;background:var(--card2);color:var(--t2);border:1px solid var(--sep)}
+.ob-start-btn{width:100%;border:none;border-radius:14px;padding:15px;background:var(--acc);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:.87rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s;margin-top:14px;opacity:.35}
+.ob-start-btn.ready{opacity:1}
+.ob-start-btn:active{opacity:.8}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(var(--nav-h) + 58px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(12px);background:var(--card);color:var(--t1);border:1px solid var(--sep);padding:9px 16px;border-radius:12px;font-size:.74rem;font-weight:600;z-index:700;opacity:0;pointer-events:none;transition:all .25s;white-space:normal;max-width:85vw;text-align:center;box-shadow:var(--sh2)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.cf-cv{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:0;transition:opacity .4s}
+.cf-cv.show{opacity:1}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{0%{transform:scale(.94);opacity:.4}100%{transform:scale(1);opacity:1}}
+.ani-1{animation:fadeUp .35s .04s ease both}
+.ani-2{animation:fadeUp .35s .08s ease both}
+.ani-3{animation:fadeUp .35s .12s ease both}
+.ani-4{animation:fadeUp .35s .17s ease both}
+.ani-5{animation:fadeUp .35s .22s ease both}
+.np{animation:pop .16s ease}
+
+/* ── PAGE HERO ── */
+.page-hero{
+  margin:14px var(--p) 0;
+  background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
+  border-radius:var(--rl);padding:18px;position:relative;overflow:hidden;
+  border:var(--border);
+}
+.page-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(var(--acc-r),.1) 0%,transparent 65%);pointer-events:none}
+.page-hero-eyebrow{font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-bottom:5px;opacity:.8}
+.page-hero-title{font-size:1.45rem;font-weight:800;color:var(--t1);letter-spacing:-.035em;line-height:1.15;margin-bottom:5px}
+.page-hero-sub{font-size:.7rem;color:var(--t2);line-height:1.55}
+.page-hero-stat{margin-top:13px;display:flex;gap:14px}
+.ph-stat{text-align:left}
+.ph-stat-v{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;color:var(--t1);font-variant-numeric:tabular-nums}
+.ph-stat-l{font-size:.56rem;color:var(--t3);margin-top:1px}
+
+/* ── FEAT CHIPS ── */
+.feat-chips{display:flex;gap:6px;overflow-x:auto;padding:0 var(--p) 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.feat-chips::-webkit-scrollbar{display:none}
+.feat-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 13px;border-radius:8px;border:1px solid var(--sep);background:var(--card);color:var(--t2);font-family:'Plus Jakarta Sans',sans-serif;font-size:.72rem;font-weight:600;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .18s;flex-shrink:0}
+.feat-chip:active{opacity:.7}
+.feat-chip.fire{border-color:rgba(var(--orange-r),.25);color:var(--orange);background:var(--orange-d)}
+.feat-chip.cmp{border-color:rgba(var(--blue-r),.25);color:var(--blue);background:var(--blue-d)}
+.feat-chip.inf{border-color:rgba(var(--red-r),.2);color:var(--red);background:var(--red-d)}
+.feat-chip.sc{border-color:rgba(var(--purple-r),.25);color:var(--purple);background:var(--purple-d)}
+.feat-chip.glo{border-color:rgba(var(--teal-r),.25);color:var(--teal);background:var(--teal-d)}
+.feat-chip.reb{border-color:rgba(var(--gold-r),.25);color:var(--gold);background:var(--gold-d)}
+.feat-chip.nab{border-color:rgba(var(--green-r),.25);color:var(--green);background:var(--green-d)}
+
+/* ── ABOUT ── */
+.about-hero{
+  margin:14px var(--p) 0;background:var(--card);border-radius:var(--rl);
+  padding:22px;border:var(--border);text-align:center;
+}
+.about-avatar{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  margin:0 auto 12px;display:grid;place-items:center;font-size:1.8rem;position:relative;
+}
+.about-avatar-ring{position:absolute;inset:-2px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--green),var(--purple));z-index:-1;opacity:.7}
+.about-name{font-size:1.1rem;font-weight:800;color:var(--t1);letter-spacing:-.025em;margin-bottom:3px}
+.about-handle{font-size:.75rem;color:var(--acc);font-weight:600;margin-bottom:7px}
+.about-bio{font-size:.74rem;color:var(--t2);line-height:1.65;margin-bottom:14px}
+.about-tags{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.about-tag{font-size:.64rem;font-weight:700;padding:4px 11px;border-radius:100px;background:var(--card2);color:var(--t2);border:1px solid var(--sep)}
+.about-socials{display:flex;gap:7px;justify-content:center}
+.about-social-btn{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:100px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.71rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;text-decoration:none;transition:opacity .15s;border:none}
+.about-social-btn:active{opacity:.65}
+.about-ig{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff}
+.about-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--sep);border-radius:var(--r);overflow:hidden;margin:13px var(--p) 0}
+.about-stat{background:var(--card);padding:13px 10px;text-align:center}
+.about-stat-v{font-family:'JetBrains Mono',monospace;font-size:.97rem;font-weight:600;color:var(--t1);margin-bottom:2px}
+.about-stat-l{font-size:.58rem;color:var(--t3);font-weight:600}
+.about-section{margin:13px var(--p) 0;background:var(--card);border-radius:var(--rl);border:var(--border);overflow:hidden}
+.about-sec-hdr{padding:12px var(--p) 10px;border-bottom:1px solid var(--sep)}
+.about-sec-ttl{font-size:.56rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.about-row{display:flex;align-items:center;gap:11px;padding:12px var(--p)}
+.about-row+.about-row{border-top:1px solid var(--sep)}
+.about-row-ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:.95rem;flex-shrink:0}
+.about-row-info{flex:1;min-width:0}
+.about-row-title{font-size:.78rem;font-weight:700;color:var(--t1)}
+.about-row-sub{font-size:.63rem;color:var(--t2);margin-top:2px;line-height:1.4}
+.about-row-arrow{font-size:.75rem;color:var(--t4);flex-shrink:0}
+
+/* ── SAWERIA ── */
+.saweria-card{
+  margin:13px var(--p) 0;
+  background:linear-gradient(135deg,#FF6B35,#F7931E);
+  border-radius:var(--rl);padding:20px;position:relative;overflow:hidden;
+}
+.saweria-card::before{content:'';position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none}
+.saw-eyebrow{font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.saw-title{font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-.025em;margin-bottom:5px}
+.saw-sub{font-size:.72rem;color:rgba(255,255,255,.75);line-height:1.55;margin-bottom:16px}
+.saw-btn{display:inline-flex;align-items:center;gap:7px;background:#fff;color:#FF6B35;border:none;border-radius:100px;padding:10px 18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.79rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;text-decoration:none;transition:opacity .15s,transform .1s}
+.saw-btn:active{opacity:.85;transform:scale(.97)}
+.saw-amt-row{display:flex;gap:7px;margin-bottom:13px}
+.saw-amt-chip{flex:1;text-align:center;padding:9px 5px;background:rgba(255,255,255,.15);color:#fff;border-radius:var(--r);border:1px solid rgba(255,255,255,.25);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.saw-amt-chip:active{background:rgba(255,255,255,.28)}
+.saw-divider{height:1px;background:rgba(255,255,255,.15);margin-bottom:13px}
+.saw-url{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.55);margin-top:9px;text-align:center}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:20px var(--p) 10px;font-size:.57rem;color:var(--t4);line-height:2;font-family:'JetBrains Mono',monospace}
+.watermark{font-size:.59rem;color:var(--t3);font-family:'Plus Jakarta Sans',sans-serif;font-weight:500}
+.wm-heart{color:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div class="ob-overlay" id="obOverlay">
+  <div style="width:100%;max-width:420px">
+    <div style="font-size:2.2rem;margin-bottom:8px;text-align:center">↗</div>
+    <div style="font-size:1.18rem;font-weight:800;color:var(--t1);text-align:center;margin-bottom:5px;letter-spacing:-.03em">InvestCalc</div>
+    <div style="font-size:.77rem;color:var(--t2);text-align:center;margin-bottom:24px;line-height:1.6">Pilih profil risiko lo — kalkulator akan kasih rekomendasi yang pas 👇</div>
+    <div style="display:flex;flex-direction:column;gap:10px" id="obProfiles"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ APP SHELL ═══════════════════════════ -->
+<div class="app-shell">
+
+<!-- ── HEADER ── -->
+<header class="hdr ani-1">
+  <div class="logo">
+    <div class="logo-ico">↗</div>
+    <div>
+      <div class="logo-name">InvestCalc</div>
+      <div class="logo-sub">by @yud.prt</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <button class="icon-btn" onclick="refreshData()" title="Refresh data live">🔄</button>
+    <button class="icon-btn" id="dmBtn" onclick="toggleDark()">☀️</button>
+  </div>
+</header>
+
+<!-- ── DATA BAR ── -->
+<div class="data-bar">
+  <div class="data-bar-left">
+    <span class="data-dot loading" id="dataDot"></span>
+    <span class="data-status" id="dataStatus">Memuat data live...</span>
+  </div>
+  <span style="font-size:.61rem;color:var(--t3);white-space:nowrap;flex-shrink:0;font-family:'JetBrains Mono',monospace">BI Rate: <strong id="biRateDisplay">5.75%</strong></span>
+</div>
+
+<!-- ── PROFILE BAR ── -->
+<div class="profile-bar hidden" id="profileBar" onclick="showOnboarding()">
+  <span class="pb-icon" id="pbIcon">🧑</span>
+  <div class="pb-info">
+    <div class="pb-name" id="pbName">Profil Investor</div>
+    <div class="pb-rec" id="pbRec">—</div>
+  </div>
+  <span class="pb-edit">Edit →</span>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 1: KALKULATOR
+════════════════════════════════════════ -->
+<div class="page active" id="page-kalk">
+
+  <!-- Page Hero -->
+  <div class="page-hero ani-1">
+    <div class="page-hero-eyebrow">↗ Simulasi Investasi</div>
+    <div class="page-hero-title">Uang Lo<br>Mau Kemana?</div>
+    <div class="page-hero-sub">Hitung potensi return investasi lo — dari deposito sampai saham, real-time.</div>
+    <div class="page-hero-stat">
+      <div class="ph-stat">
+        <div class="ph-stat-v" id="botAmt">Rp —</div>
+        <div class="ph-stat-l">Estimasi Nilai Akhir</div>
+      </div>
+      <div class="ph-stat">
+        <div class="ph-stat-v" id="ph-pill">—</div>
+        <div class="ph-stat-l">Total Return</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gaji -->
+  <div class="salary-card ani-2">
+    <div class="salary-header">
+      <div class="sal-hed-row">
+        <div>
+          <div class="sal-hed-title">💸 Gaji Lo Berapa?</div>
+          <div style="font-size:.65rem;color:var(--t2);margin-top:2px">Biar tau berapa yang bisa diinvestasiin 👇</div>
+        </div>
+        <span class="sg-val" id="vGaji">Rp 5 Jt</span>
+      </div>
+      <input type="range" id="sGaji" min="1000000" max="30000000" step="500000" value="5000000" style="margin-top:10px">
+      <div class="sg-lims"><span>Rp 1 Jt</span><span>Rp 30 Jt</span></div>
+    </div>
+    <div class="salary-breakdown" id="salBreakdown"></div>
+    <div class="salary-btns">
+      <button class="sal-btn sal-btn-main" id="salApplyBtn" onclick="setFromSalary()">💰 Pakai 20% sebagai DCA</button>
+      <button class="sal-btn sal-btn-suggest" onclick="showSuggest()">💡 Saran Alokasi</button>
+    </div>
+  </div>
+
+  <!-- Instrumen -->
+  <div class="sec ani-2">
+    <div class="sec-lbl">🎯 Instrumen Investasi</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 var(--p)" id="catBar"></div>
+    <div class="explainer" id="explainer"></div>
+    <div class="pgrid" id="pgrid"></div>
+    <div style="display:none;margin:10px var(--p) 0;padding:11px 13px;background:var(--orange-d);border-radius:var(--r);border:1px solid rgba(190,89,0,.2);font-size:.69rem;color:var(--orange);line-height:1.55" id="wstrip">⚠ Return saham simulasi acak tiap kali (seperti aslinya!). <strong>Tap untuk re-roll.</strong></div>
+  </div>
+
+  <!-- Parameter -->
+  <div class="sec ani-3">
+    <div class="sec-lbl">⚙️ Modal & Durasi</div>
+    <div class="card">
+      <div class="sg">
+        <div class="sg-row"><span class="sg-lbl">💰 Modal Awal</span><span class="sg-val" id="vModal">Rp 10 Jt</span></div>
+        <input type="range" id="sModal" min="1000000" max="5000000000" step="1000000" value="10000000">
+        <div class="sg-lims"><span>Rp 1 Jt</span><span>Rp 5 M</span></div>
+      </div>
+      <div class="sg">
+        <div class="sg-row"><span class="sg-lbl">⏳ Lama Investasi</span><span class="sg-val" id="vTahun">5 Tahun</span></div>
+        <input type="range" id="sTahun" min="1" max="30" step="1" value="5">
+        <div class="sg-lims"><span>1 Thn</span><span>30 Thn</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Opsi -->
+  <div class="gap"></div>
+  <div class="sec ani-3">
+    <div class="sec-lbl">🎛️ Opsi Lanjutan</div>
+    <div class="card">
+      <div class="trow">
+        <div class="tr-info">
+          <div class="tr-n">📅 Nabung Rutin (DCA)</div>
+          <div class="tr-s">Setor tiap bulan — konsistensi mengalahkan timing 🏔</div>
+        </div>
+        <label class="tog"><input type="checkbox" id="tDCA"><span class="tk"></span></label>
+      </div>
+      <div class="coll" id="dcaPanel">
+        <div class="coll-inner">
+          <div class="sg-row" style="margin-top:6px"><span class="sg-lbl" style="font-size:.78rem">Setor Per Bulan</span><span class="sg-val" id="vDCA">Rp 500rb</span></div>
+          <input type="range" id="sDCA" min="100000" max="10000000" step="100000" value="500000">
+          <div class="sg-lims"><span>Rp 100rb</span><span>Rp 10 Jt</span></div>
+        </div>
+      </div>
+      <div class="trow" id="pajakRow">
+        <div class="tr-info">
+          <div class="tr-n">🧾 Potong Pajak <span class="tr-info-btn" onclick="showTaxModal()">Info + Coretax ℹ️</span></div>
+          <div class="tr-s" id="pajakSub">Deposito: PPh Final 20% · auto bank</div>
+        </div>
+        <label class="tog"><input type="checkbox" id="tPajak"><span class="tk"></span></label>
+      </div>
+      <div class="trow">
+        <div class="tr-info">
+          <div class="tr-n">📉 Nilai Riil (vs Inflasi)</div>
+          <div class="tr-s">Koreksi daya beli setelah inflasi</div>
+        </div>
+        <label class="tog"><input type="checkbox" id="tInflasi" checked><span class="tk"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- HASIL HERO -->
+  <div class="hero ani-4" id="heroCard">
+    <div class="hero-tag" id="heroTag">💰 Cuan Lo Bakal Jadi</div>
+    <div class="hero-prod" id="heroProd">Pilih instrumen di atas dulu 👆</div>
+    <div class="hero-amt" id="heroAmt">Rp —</div>
+    <div class="hero-real" id="heroReal"></div>
+    <div class="pill pos" id="heroPill">— %</div>
+    <div class="hero-sep"></div>
+    <div class="hero-meta">
+      <div><div class="hm-val" id="mUntung">—</div><div class="hm-lbl">✨ Profit Bersih</div></div>
+      <div><div class="hm-val" id="mSetor">—</div><div class="hm-lbl">💼 Total Disetor</div></div>
+      <div><div class="hm-val" id="mDurasi">—</div><div class="hm-lbl">⏳ Durasi</div></div>
+    </div>
+    <div class="hero-btns">
+      <button class="hero-btn hero-btn-primary" onclick="openCompare()">⚖️ Bandingkan Semua</button>
+      <button class="hero-btn" onclick="shareResult()">📤 Flex ke Temen</button>
+    </div>
+  </div>
+
+  <!-- Inflasi Banner -->
+  <div class="inf-ban ani-4">
+    <div class="ib-top">
+      <span class="ib-ico">🌡</span>
+      <div class="ib-body">
+        <div class="ib-ttl">Inflasi: <span id="infDisplay">4.76%</span>/thn (Feb 2026)</div>
+        <div class="ib-sub">Return investasi lo harus lebih tinggi dari angka ini!</div>
+        <div class="inf-pills">
+          <div class="ip on" data-inf="0.0476" onclick="selInf(this)">4.76% BPS</div>
+          <div class="ip" data-inf="0.0263" onclick="selInf(this)">2.63% Inti</div>
+          <div class="ip" data-inf="0.025" onclick="selInf(this)">2.5% Target</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VS Inflasi -->
+  <div class="rcard ani-4">
+    <div class="rc-ttl">⚔️ Lo vs Inflasi — Siapa Menang?</div>
+    <div class="vs-row">
+      <div class="vs-col" id="vsInv"><div class="vs-lbl">Investasimu</div><div class="vs-val" id="vsInvV" style="color:var(--acc)">—</div><div class="vs-sub" id="vsInvS">Return/thn</div></div>
+      <div class="vs-col neu"><div class="vs-lbl">Inflasi 👹</div><div class="vs-val" style="color:var(--orange)" id="vsInfV">4.76%</div><div class="vs-sub">Feb 2026 BPS</div></div>
+      <div class="vs-col" id="vsReal"><div class="vs-lbl">Return Riil</div><div class="vs-val" id="vsRealV">—</div><div class="vs-sub">Stlh inflasi</div></div>
+    </div>
+    <div class="verdict" id="verdict">Pilih instrumen dulu buat lihat hasilnya 👆</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats2 ani-4">
+    <div class="scard"><div class="s-lbl">📈 Return/Tahun</div><div class="s-val" id="stRA">—</div></div>
+    <div class="scard"><div class="s-lbl">✖️ Nilai Berlipat</div><div class="s-val" id="stKali">—</div></div>
+  </div>
+
+  <!-- Chart -->
+  <div class="rcard ani-4">
+    <div class="rc-ttl" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span>📊 Grafik Pertumbuhan</span>
+      <div class="ch-toggle">
+        <button class="ct-btn on" id="ctLine" onclick="setChartMode('line')">📈 Garis</button>
+        <button class="ct-btn" id="ctStack" onclick="setChartMode('stack')">📊 Komposisi</button>
+      </div>
+    </div>
+    <div class="ch-wrap">
+      <div class="ch-box"><canvas id="mainChart"></canvas></div>
+      <div id="chNote" style="display:none;font-size:.59rem;color:var(--t3);text-align:center;margin-top:6px;line-height:1.5">Biru = Modal Disetorkan · Hijau = Profit/Return</div>
+      <div id="chLineLegend" style="margin-top:10px;padding:10px 12px;background:var(--card2);border-radius:var(--r);font-size:.66rem;color:var(--t2);line-height:1.8">
+        <strong style="color:var(--t1)">Cara baca grafik:</strong><br>
+        📈 <strong>Garis Biru</strong> = Return nominal (nilai Rp bertambah)<br>
+        🟠 <strong>Garis Oranye</strong> = Daya beli riil setelah inflasi (aktifkan toggle inflasi untuk tampilkan)<br>
+        ➖ <strong>Garis 0%</strong> = Titik modal awal. Garis oranye di bawah 0% = kalah inflasi!
+      </div>
+    </div>
+  </div>
+
+  <!-- Insight -->
+  <div class="rcard ani-5" id="insightCard" style="border-left:3px solid var(--acc);transition:border-color .3s">
+    <div class="rc-ttl" style="display:flex;align-items:center;gap:6px"><span>🧠</span> Lo Harus Tau Ini</div>
+    <div class="ins-body" id="insightBody">
+      <div class="ins-item"><span class="ins-dot"></span><span>Pilih instrumen di atas buat lihat analisis personalnya.</span></div>
+    </div>
+  </div>
+
+  <!-- Vibe Check -->
+  <div class="rcard ani-5">
+    <div class="rc-ttl">✅ Vibe Check Strategi Lo</div>
+    <div class="vibe-top">
+      <div class="vg-wrap">
+        <svg class="vg-svg" viewBox="0 0 60 60"><circle class="vg-track" cx="30" cy="30" r="25"/><circle class="vg-prog" id="vibeCircle" cx="30" cy="30" r="25"/></svg>
+        <div class="vg-num" id="vibeNum">—</div>
+      </div>
+      <div class="vb-info">
+        <span class="vb-emoji" id="vibeEmoji">🤔</span>
+        <div class="vb-verdict" id="vibeVerdict">Pilih instrumen dulu...</div>
+        <div class="vb-sub" id="vibeSub"></div>
+      </div>
+    </div>
+    <div class="vb-checks" id="vibeChecks"></div>
+  </div>
+
+  <!-- Kasur -->
+  <div class="rcard ani-5" id="kasurCard">
+    <div class="rc-ttl">🛏️ Invest vs Simpen di Kasur</div>
+    <div class="kasur-grid">
+      <div class="kasur-col kasur-inv"><div class="k-ico">📈</div><div class="k-name">Investasi lo</div><div class="k-val" id="kasurInvest" style="color:var(--acc)">—</div><div class="k-pct" id="kasurInvPct">—</div></div>
+      <div class="kasur-col kasur-cash"><div class="k-ico">🛏️</div><div class="k-name">Cash doang</div><div class="k-val" id="kasurCash" style="color:var(--red)">—</div><div class="k-pct" id="kasurCashPct">—</div></div>
+    </div>
+    <div class="verdict" id="kasurNote">—</div>
+  </div>
+
+  <!-- Analogi -->
+  <div class="rcard ani-5" id="analogiCard" style="display:none">
+    <div class="rc-ttl">🎁 Cuan Lo Bisa Beli Apa?</div>
+    <div style="font-size:.76rem;color:var(--t2);margin-bottom:4px" id="anaTagline">—</div>
+    <div class="ana-grid" id="anaGrid"></div>
+    <div style="margin-top:8px;font-size:.6rem;color:var(--t3);text-align:center">*Estimasi harga pasar Mar 2026</div>
+  </div>
+
+  <!-- Zakat -->
+  <div class="rcard" id="zakatCard" style="border-left:3px solid var(--teal);display:none">
+    <div class="rc-ttl" style="display:flex;align-items:center;gap:6px"><span>🕌</span> Zakat Investasi</div>
+    <div class="zakat-why" id="zakatWhy"></div>
+    <div class="zakat-ayat">
+      <div class="zakat-ayat-ar">خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا</div>
+      <div class="zakat-ayat-tr">"Ambillah zakat dari sebagian harta mereka, dengan zakat itu kamu membersihkan dan mensucikan mereka."</div>
+      <div class="zakat-ayat-src">QS. At-Taubah: 103</div>
+    </div>
+    <div class="zakat-nisab" id="zakatNisab">Memuat data nisab...</div>
+    <div class="zakat-types" id="zakatTypes"></div>
+    <div style="font-size:.67rem;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Bayar Zakat Via</div>
+    <div class="zakat-lembaga">
+      <a href="https://baznas.go.id" target="_blank" class="zakat-lem-chip">BAZNAS</a>
+      <a href="https://dompetdhuafa.org" target="_blank" class="zakat-lem-chip">Dompet Dhuafa</a>
+      <a href="https://rumahzakat.org" target="_blank" class="zakat-lem-chip">Rumah Zakat</a>
+      <a href="https://nucare.id" target="_blank" class="zakat-lem-chip">NU Care</a>
+      <a href="https://yatimmandiri.org" target="_blank" class="zakat-lem-chip">Yatim Mandiri</a>
+    </div>
+    <div style="font-size:.62rem;color:var(--t3);margin-top:8px;line-height:1.65">*Konsultasikan dengan lembaga zakat terpercaya.</div>
+  </div>
+
+  <!-- Kapan Beli -->
+  <div class="sec ani-5" style="margin-top:10px">
+    <div class="sec-lbl">🛍️ Kapan Gue Bisa Beli...?</div>
+    <div class="card" style="padding:16px var(--p)">
+      <div style="font-size:.72rem;color:var(--t2);line-height:1.55;margin-bottom:12px">Pilih impian lo — harganya di Mar 2026, dan berapa tahun lagi bisa kebeli 🎯</div>
+      <div class="target-row" id="targetRow"></div>
+      <input type="text" class="tgt-custom" id="tgtCustom" placeholder="✏️ Atau ketik harga sendiri" inputmode="numeric">
+      <div class="tgt-result" id="tgtResult" style="display:none">
+        <div style="font-size:.65rem;font-weight:700;color:var(--acc);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px" id="tgtItemName"></div>
+        <div class="tgt-price-tag" id="tgtPriceTag"></div>
+        <div class="tgt-big" id="tgtYears">—</div>
+        <div class="tgt-sub" id="tgtDesc">—</div>
+        <div style="margin-top:10px;font-size:.66rem;color:var(--t2);line-height:1.65;background:var(--card2);border-radius:var(--r);padding:9px 11px">💡 <strong>Kalau belum cukup modal</strong>, lo bisa nabung rutin tiap bulan sambil modal berbunga:</div>
+        <div class="tgt-alts">
+          <div class="tgt-alt"><div class="tgt-alt-val" id="tgtDca2">—</div><div class="tgt-alt-lbl">Nabung/bln agar cukup dalam <strong>2 tahun</strong></div></div>
+          <div class="tgt-alt"><div class="tgt-alt-val" id="tgtDca5">—</div><div class="tgt-alt-lbl">Nabung/bln agar cukup dalam <strong>5 tahun</strong></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wealth Timeline -->
+  <div class="gap"></div>
+  <div class="sec ani-5">
+    <div class="sec-lbl">🗺️ Wealth Timeline Lo</div>
+    <div style="font-size:.72rem;color:var(--t2);margin-bottom:8px;padding:0 var(--p)">Kalau lo <strong>konsisten invest</strong> mulai sekarang 👉</div>
+    <div class="timeline-scroll" id="timelineScroll"></div>
+  </div>
+
+  <!-- Cara Beli -->
+  <div class="gap"></div>
+  <div class="sec">
+    <div class="sec-lbl">🛒 Cara &amp; Tempat Beli</div>
+    <div style="font-size:.72rem;color:var(--t2);margin-bottom:12px;padding:0 2px">Tap instrumen buat lihat langkah &amp; aplikasinya 👇</div>
+    <div id="carabeliGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 var(--p)"></div>
+    <div id="carabeliDetail" style="margin:10px var(--p) 0;display:none"></div>
+  </div>
+
+  <footer>
+    <div class="watermark">Made with <span class="wm-heart">♥</span> by Yudha · @yud.prt</div>
+    Data: BPS · DJPPR · OJK · BI · Coretax · Mar 2026<br>
+    SR024 aktif s.d. 15 Apr 2026 · Simulasi edukasi, bukan saran investasi resmi
+  </footer>
+</div><!-- end page-kalk -->
+
+
+<!-- ════════════════════════════════════════
+     PAGE 2: FITUR
+════════════════════════════════════════ -->
+<div class="page" id="page-fitur">
+
+  <div class="sec" style="padding-top:20px">
+    <div class="sec-lbl">✨ Semua Kalkulator</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px var(--p) 0">
+    <button class="feat-grid-btn" onclick="openFire()" style="--fc:var(--orange);--fb:var(--orange-d)">
+      <span style="font-size:1.5rem;margin-bottom:4px">🔥</span>
+      <div style="font-size:.84rem;font-weight:700;color:var(--t1);margin-bottom:3px">FIRE</div>
+      <div style="font-size:.64rem;color:var(--t2);line-height:1.4">Hitung kapan bisa pensiun dini dengan Rule of 4%</div>
+    </button>
+    <button class="feat-grid-btn" onclick="openCompare()" style="--fc:var(--blue);--fb:var(--blue-d)">
+      <span style="font-size:1.5rem;margin-bottom:4px">⚖️</span>
+      <div style="font-size:.84rem;font-weight:700;color:var(--t1);margin-bottom:3px">Bandingkan</div>
+      <div style="font-size:.64rem;color:var(--t2);line-height:1.4">Ranking semua instrumen dari modal yang sama</div>
+    </button>
+    <button class="feat-grid-btn" onclick="openInflasiCalc()" style="--fc:var(--red);--fb:var(--red-d)">
+      <span style="font-size:1.5rem;margin-bottom:4px">💸</span>
+      <div style="font-size:.84rem;font-weight:700;color:var(--t1);margin-bottom:3px">Daya Beli</div>
+      <div style="font-size:.64rem;color:var(--t2);line-height:1.4">Rp 1 Jt hari ini = berapa 10 tahun lagi?</div>
+    </button>
+    <button class="feat-grid-btn" onclick="openSkenario()" style="--fc:var(--purple);--fb:var(--purple-d)">
+      <span style="font-size:1.5rem;margin-bottom:4px">📊</span>
+      <div style="font-size:.84rem;font-weight:700;color:var(--t1);margin-bottom:3px">3 Skenario</div>
+      <div style="font-size:.64rem;color:var(--t2);line-height:1.4">Optimis, Normal, Pesimis — siap semua kondisi</div>
+    </button>
+    <button class="feat-grid-btn" onclick="openGlosarium()" style="--fc:var(--teal);--fb:var(--teal-d)">
+      <span style="font-size:1.5rem;margin-bottom:4px">📖</span>
+      <div style="font-size:.84rem;font-weight:700;color:var(--t1);margin-bottom:3px">Glosarium</div>
+      <div style="font-size:.64rem;color:var(--t2);line-height:1.4">18 istilah investasi yang wajib lo tahu</div>
+    </button>
+    <button class="feat-grid-btn" onclick="openRebalance()" style="--fc:var(--gold);--fb:var(--gold-d)">
+      <span style="font-size:1.5rem;margin-bottom:4px">🔄</span>
+      <div style="font-size:.84rem;font-weight:700;color:var(--t1);margin-bottom:3px">Rebalancing</div>
+      <div style="font-size:.64rem;color:var(--t2);line-height:1.4">Cek alokasi portfolio lo sudah pas belum</div>
+    </button>
+    <button class="feat-grid-btn" onclick="openNabCalc()" style="--fc:var(--green);--fb:var(--green-d)">
+      <span style="font-size:1.5rem;margin-bottom:4px">📅</span>
+      <div style="font-size:.84rem;font-weight:700;color:var(--t1);margin-bottom:3px">Simulasi DCA</div>
+      <div style="font-size:.64rem;color:var(--t2);line-height:1.4">Nabung Rp X/bulan selama Y tahun = berapa?</div>
+    </button>
+    <button class="feat-grid-btn" onclick="showSuggest()" style="--fc:var(--acc);--fb:var(--acc-d)">
+      <span style="font-size:1.5rem;margin-bottom:4px">💡</span>
+      <div style="font-size:.84rem;font-weight:700;color:var(--t1);margin-bottom:3px">Saran Alokasi</div>
+      <div style="font-size:.64rem;color:var(--t2);line-height:1.4">Rekomendasi portfolio sesuai profil risiko lo</div>
+    </button>
+  </div>
+
+  <!-- Info Data -->
+  <div class="sec" style="margin-top:16px">
+    <div class="sec-lbl">📡 Sumber Data</div>
+    <div class="card">
+      <div class="trow" style="min-height:auto;padding:12px var(--p)">
+        <div style="width:34px;height:34px;border-radius:9px;background:var(--green-d);display:grid;place-items:center;font-size:1rem;flex-shrink:0">🏛️</div>
+        <div class="tr-info">
+          <div class="tr-n" style="font-size:.78rem">Bank Indonesia</div>
+          <div class="tr-s">BI Rate, kebijakan moneter</div>
+        </div>
+      </div>
+      <div class="trow" style="min-height:auto;padding:12px var(--p)">
+        <div style="width:34px;height:34px;border-radius:9px;background:var(--blue-d);display:grid;place-items:center;font-size:1rem;flex-shrink:0">📊</div>
+        <div class="tr-info">
+          <div class="tr-n" style="font-size:.78rem">BPS — Inflasi Februari 2026</div>
+          <div class="tr-s">4.76% YoY · 2.63% Inti</div>
+        </div>
+      </div>
+      <div class="trow" style="min-height:auto;padding:12px var(--p)">
+        <div style="width:34px;height:34px;border-radius:9px;background:var(--teal-d);display:grid;place-items:center;font-size:1rem;flex-shrink:0">🏦</div>
+        <div class="tr-info">
+          <div class="tr-n" style="font-size:.78rem">DJPPR Kemenkeu</div>
+          <div class="tr-s">SR024, ORI029, SBN ritel 2026</div>
+        </div>
+      </div>
+      <div class="trow" style="min-height:auto;padding:12px var(--p)">
+        <div style="width:34px;height:34px;border-radius:9px;background:var(--purple-d);display:grid;place-items:center;font-size:1rem;flex-shrink:0">⚡</div>
+        <div class="tr-info">
+          <div class="tr-n" style="font-size:.78rem">Live via Claude AI</div>
+          <div class="tr-s">Data diupdate real-time via web search</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+</div><!-- end page-fitur -->
+
+
+<!-- ════════════════════════════════════════
+     PAGE 3: TENTANG
+════════════════════════════════════════ -->
+<div class="page" id="page-tentang">
+
+  <!-- About Hero -->
+  <div class="about-hero ani-1">
+    <div class="about-avatar">
+      <div class="about-avatar-ring"></div>
+      🧑‍💻
+    </div>
+    <div class="about-name">Yudha</div>
+    <div class="about-handle">@yud.prt</div>
+    <div class="about-bio">Gue bikin InvestCalc karena frustrasi sama kalkulator investasi yang ribet dan nggak ngerti bahasa anak muda. Semua harusnya simpel — cuan itu buat semua orang! 🚀</div>
+    <div class="about-tags">
+      <span class="about-tag">💻 Developer</span>
+      <span class="about-tag">📈 Investor</span>
+      <span class="about-tag">📱 Content Creator</span>
+      <span class="about-tag">🇮🇩 Indonesia</span>
+    </div>
+    <div class="about-socials">
+      <a href="https://instagram.com/yud.prt" target="_blank" class="about-social-btn about-ig">
+        <span style="font-size:1rem">📸</span> @yud.prt
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="about-stats">
+    <div class="about-stat">
+      <div class="about-stat-v">18+</div>
+      <div class="about-stat-l">Instrumen</div>
+    </div>
+    <div class="about-stat">
+      <div class="about-stat-v">8</div>
+      <div class="about-stat-l">Kalkulator</div>
+    </div>
+    <div class="about-stat">
+      <div class="about-stat-v">Live</div>
+      <div class="about-stat-l">Data Real-time</div>
+    </div>
+  </div>
+
+  <!-- About App -->
+  <div class="about-section ani-2">
+    <div class="about-sec-hdr">
+      <div class="about-sec-ttl">📱 Tentang Aplikasi</div>
+    </div>
+    <div class="about-row">
+      <div class="about-row-ico" style="background:var(--blue-d)">↗</div>
+      <div class="about-row-info">
+        <div class="about-row-title">InvestCalc</div>
+        <div class="about-row-sub">Kalkulator investasi komprehensif untuk investor muda Indonesia. Dari deposito, SBN, reksa dana, hingga P2P lending.</div>
+      </div>
+    </div>
+    <div class="about-row">
+      <div class="about-row-ico" style="background:var(--green-d)">🎯</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Tujuan</div>
+        <div class="about-row-sub">Bikin investasi jadi mudah dipahami — pakai bahasa sehari-hari, bukan bahasa buku teks.</div>
+      </div>
+    </div>
+    <div class="about-row">
+      <div class="about-row-ico" style="background:var(--orange-d)">⚡</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Teknologi</div>
+        <div class="about-row-sub">Data live via Claude AI · Chart.js · Pure HTML/CSS/JS · Progressive Web App</div>
+      </div>
+    </div>
+    <div class="about-row">
+      <div class="about-row-ico" style="background:var(--purple-d)">🔒</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Privasi</div>
+        <div class="about-row-sub">Zero data collection. Semua kalkulasi jalan di browser lo — tidak ada yang dikirim ke server.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Follow IG -->
+  <div class="about-section ani-3" style="margin-top:14px">
+    <div class="about-sec-hdr">
+      <div class="about-sec-ttl">📸 Follow di Instagram</div>
+    </div>
+    <div style="padding:16px var(--p)">
+      <div style="background:linear-gradient(135deg,#833ab4 0%,#fd1d1d 50%,#fcb045 100%);border-radius:var(--rl);padding:20px;text-align:center">
+        <div style="font-size:1.6rem;margin-bottom:8px">📸</div>
+        <div style="font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:6px">@yud.prt</div>
+        <div style="font-size:.72rem;color:rgba(255,255,255,.8);line-height:1.6;margin-bottom:16px">Tips investasi, keuangan Gen Z, dan update terbaru InvestCalc. Follow biar nggak ketinggalan! ✨</div>
+        <a href="https://instagram.com/yud.prt" target="_blank"
+           style="display:inline-flex;align-items:center;gap:7px;background:#fff;color:#833ab4;border-radius:100px;padding:10px 20px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.79rem;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s">
+          📸 Buka Instagram
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="about-section ani-4" style="margin-top:14px">
+    <div class="about-sec-hdr">
+      <div class="about-sec-ttl">⚠️ Disclaimer Penting</div>
+    </div>
+    <div style="padding:14px var(--p)">
+      <div style="font-size:.72rem;color:var(--t2);line-height:1.75">
+        InvestCalc adalah <strong>alat simulasi edukatif</strong>, bukan saran investasi resmi. Semua angka adalah <strong>estimasi</strong> berdasarkan data historis dan asumsi yang bisa berubah.<br><br>
+        Return masa lalu <strong>tidak menjamin</strong> return di masa depan. Selalu lakukan riset sendiri (DYOR) dan konsultasikan dengan penasihat keuangan berlisensi sebelum berinvestasi.<br><br>
+        <span style="color:var(--t3)">Data: BPS · DJPPR · OJK · BI · Mar 2026</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+</div><!-- end page-tentang -->
+
+
+<!-- ════════════════════════════════════════
+     PAGE 4: DUKUNG
+════════════════════════════════════════ -->
+<div class="page" id="page-dukung">
+
+  <div class="sec" style="padding-top:20px">
+    <div class="sec-lbl">☕ Support Kreator</div>
+  </div>
+
+  <!-- Saweria Card Utama -->
+  <div class="saweria-card ani-1">
+    <div class="saw-eyebrow">☕ <span>Traktir Kopi</span></div>
+    <div class="saw-title">Support InvestCalc</div>
+    <div class="saw-sub">Kalau InvestCalc ngebantu lo ngerti investasi dan manage keuangan — traktir gue kopi biar bisa terus bikin fitur baru! 🙏</div>
+    <div class="saw-amt-row">
+      <div class="saw-amt-chip" onclick="openSaweria(10000)">Rp 10rb</div>
+      <div class="saw-amt-chip" onclick="openSaweria(20000)">Rp 20rb</div>
+      <div class="saw-amt-chip" onclick="openSaweria(50000)">Rp 50rb</div>
+    </div>
+    <div class="saw-divider"></div>
+    <a href="https://saweria.co/yudprt" target="_blank" class="saw-btn">
+      <span style="font-size:1.1rem">☕</span>
+      Traktir di Saweria
+    </a>
+    <div class="saw-url">saweria.co/yudprt</div>
+  </div>
+
+  <!-- Why Support -->
+  <div class="about-section ani-2" style="margin-top:14px">
+    <div class="about-sec-hdr">
+      <div class="about-sec-ttl">💝 Dana Kopi Untuk Apa?</div>
+    </div>
+    <div class="about-row">
+      <div class="about-row-ico" style="background:var(--blue-d)">⚡</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Fitur Baru</div>
+        <div class="about-row-sub">Kalkulator tambahan, lebih banyak instrumen, dan fitur yang lo request</div>
+      </div>
+    </div>
+    <div class="about-row">
+      <div class="about-row-ico" style="background:var(--green-d)">📡</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Data Real-time</div>
+        <div class="about-row-sub">Biaya API untuk update harga emas, suku bunga, dan data investasi live</div>
+      </div>
+    </div>
+    <div class="about-row">
+      <div class="about-row-ico" style="background:var(--orange-d)">🌙</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Begadang Coding</div>
+        <div class="about-row-sub">Literally buat beli kopi buat begadang nambahin fitur 😅</div>
+      </div>
+    </div>
+    <div class="about-row">
+      <div class="about-row-ico" style="background:var(--purple-d)">❤️</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Gratis Selamanya</div>
+        <div class="about-row-sub">InvestCalc akan selalu gratis 100%. Support lo opsional tapi sangat berarti!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alternatif -->
+  <div class="about-section ani-3" style="margin-top:14px">
+    <div class="about-sec-hdr">
+      <div class="about-sec-ttl">🙏 Cara Lain Support</div>
+    </div>
+    <div class="about-row" style="cursor:pointer" onclick="shareApp()">
+      <div class="about-row-ico" style="background:var(--green-d)">📤</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Share ke Temen</div>
+        <div class="about-row-sub">Share InvestCalc ke temen-temen yang mau mulai invest</div>
+      </div>
+      <div class="about-row-arrow">→</div>
+    </div>
+    <div class="about-row">
+      <a href="https://instagram.com/yud.prt" target="_blank" style="display:contents;text-decoration:none">
+        <div class="about-row-ico" style="background:linear-gradient(135deg,rgba(131,58,180,.12),rgba(252,176,69,.12))">📸</div>
+        <div class="about-row-info">
+          <div class="about-row-title">Follow Instagram</div>
+          <div class="about-row-sub">@yud.prt — tips investasi & update terbaru</div>
+        </div>
+        <div class="about-row-arrow">→</div>
+      </a>
+    </div>
+    <div class="about-row" style="cursor:pointer" onclick="shareResult()">
+      <div class="about-row-ico" style="background:var(--teal-d)">💬</div>
+      <div class="about-row-info">
+        <div class="about-row-title">Flex Hasil Simulasi</div>
+        <div class="about-row-sub">Share screenshot hasil kalkulator ke story Instagram lo</div>
+      </div>
+      <div class="about-row-arrow">→</div>
+    </div>
+  </div>
+
+  <!-- Thank you -->
+  <div style="margin:20px var(--p) 0;text-align:center;padding:20px;background:var(--card);border-radius:var(--rxl);box-shadow:var(--sh)">
+    <div style="font-size:2rem;margin-bottom:8px">🙏</div>
+    <div style="font-size:.85rem;font-weight:700;color:var(--t1);margin-bottom:6px;letter-spacing:-.02em">Makasih udah pakai InvestCalc!</div>
+    <div style="font-size:.73rem;color:var(--t2);line-height:1.65">Lo udah ambil langkah pertama buat melek finansial. Semoga cuan lo makin banyak dan investasinya makin oke! 💪✨</div>
+    <div style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--t3)">— Yudha · @yud.prt</div>
+  </div>
+
+  <div style="height:20px"></div>
+</div><!-- end page-dukung -->
+
+
+<!-- ════════ BOTTOM TICKER ════════ -->
+<div class="bot" id="botBar">
+  <div class="bot-left">
+    <div class="bot-prod" id="botProd">Pilih instrumen dulu 👆</div>
+    <div class="bot-amt" id="botAmt2">Rp —</div>
+  </div>
+  <div class="pill pos" id="botPill" style="margin-bottom:0">—</div>
+</div>
+
+<!-- ════════ BOTTOM NAV ════════ -->
+<nav class="nav">
+  <button class="nav-item active" id="nav-kalk" onclick="switchPage('kalk')">
+    <span class="nav-ico">📊</span>
+    <span class="nav-lbl">Kalkulator</span>
+    <span class="nav-dot"></span>
+  </button>
+  <button class="nav-item" id="nav-fitur" onclick="switchPage('fitur')">
+    <span class="nav-ico">✨</span>
+    <span class="nav-lbl">Fitur</span>
+    <span class="nav-dot"></span>
+  </button>
+  <button class="nav-item" id="nav-tentang" onclick="switchPage('tentang')">
+    <span class="nav-ico">👤</span>
+    <span class="nav-lbl">Tentang</span>
+    <span class="nav-dot"></span>
+  </button>
+  <button class="nav-item" id="nav-dukung" onclick="switchPage('dukung')">
+    <span class="nav-ico">☕</span>
+    <span class="nav-lbl">Dukung</span>
+    <span class="nav-dot"></span>
+  </button>
+</nav>
+
+</div><!-- end app-shell -->
+
+<div class="toast" id="toast"></div>
+<canvas class="cf-cv" id="cfCv"></canvas>
+
+<!-- ════════ OVERLAYS ════════ -->
+
+<!-- TAX -->
+<div class="overlay" id="taxOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('taxOverlay').classList.remove('open')">✕</div>
+    <div class="modal-title">🧾 Pajak Investasi + Coretax 2026</div>
+    <div class="coretax-banner">
+      <div class="ctb-title">🏛️ Coretax — Sistem Pajak Baru 2026</div>
+      <div class="ctb-text">DJP resmi meluncurkan Coretax. Akses di <strong>coretax.pajak.go.id</strong></div>
+      <div class="ctb-features">
+        <div class="ctb-feat">✅ <span>SPT pra-isi otomatis dari data bank, platform &amp; broker</span></div>
+        <div class="ctb-feat">💳 <span>Bayar pajak online langsung di dashboard</span></div>
+        <div class="ctb-feat">⚡ <span>Deadline SPT OP: <strong>31 Maret</strong> tiap tahun</span></div>
+      </div>
+    </div>
+    <div class="tax-block">
+      <div class="tax-block-ttl">🏦 Deposito — PPh Final 20% <span class="tax-badge tax-auto">🤖 Auto</span></div>
+      <div class="tax-block-reg">PP No. 131/2000 jo PP No. 123/2015</div>
+      <div class="tax-block-text">Auto dipotong bank. BRI 3%/thn → Neto 2.40%/thn.<div class="tax-block-ex">✅ Tidak perlu lapor sendiri — prefill otomatis ke SPT Coretax.</div></div>
+    </div>
+    <div class="tax-block">
+      <div class="tax-block-ttl">📜 Obligasi SBN — PPh Final 10% <span class="tax-badge tax-auto">🤖 Auto</span></div>
+      <div class="tax-block-reg">PP No. 100/2013 · PMK 85/2011</div>
+      <div class="tax-block-text">SR024 5.55%/thn → Neto 4.995%/thn.<div class="tax-block-ex">✅ Prefill otomatis dari DJPPR ke SPT Coretax.</div></div>
+    </div>
+    <div class="tax-block">
+      <div class="tax-block-ttl">🤝 P2P Lending — PPh Pasal 23 · 15% <span class="tax-badge tax-lapor">⚠️ Wajib Lapor</span></div>
+      <div class="tax-block-reg">PMK No. 69/PMK.03/2010</div>
+      <div class="tax-block-text"><strong>Tanpa NPWP: kena 30%!</strong><div class="tax-block-ex">⚠️ WAJIB LAPOR di SPT Coretax — lampirkan Bukti Potong dari platform.</div></div>
+    </div>
+    <div class="tax-block">
+      <div class="tax-block-ttl">📊 Reksa Dana — NAB Bebas PPh <span class="tax-badge tax-bebas">✅ Bebas</span></div>
+      <div class="tax-block-reg">UU PPh Pasal 4 Ayat 3 · UU HPP 7/2021</div>
+      <div class="tax-block-text">Kenaikan NAB bebas PPh! Tax efficiency terbaik.<div class="tax-block-ex">✅ Dividen umumnya prefill di SPT.</div></div>
+    </div>
+    <div class="tax-block">
+      <div class="tax-block-ttl">📈 Saham — PPh Jual &amp; Dividen <span class="tax-badge tax-auto">🤖 Auto</span></div>
+      <div class="tax-block-reg">PP 14/1997 · UU HPP 7/2021</div>
+      <div class="tax-block-text">PPh Final 0.1% dari nilai jual (auto broker) + dividen PPh 10%.<div class="tax-block-ex">✅ Auto dari broker ke Coretax.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUGGEST -->
+<div class="overlay" id="suggestOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('suggestOverlay').classList.remove('open')">✕</div>
+    <div id="suggestContent"></div>
+  </div>
+</div>
+
+<!-- FIRE -->
+<div class="overlay" id="fireOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('fireOverlay').classList.remove('open')">✕</div>
+    <div class="modal-title">🔥 FIRE Calculator — Pensiun Dini</div>
+    <div style="font-size:.73rem;color:var(--t2);line-height:1.65;margin-bottom:16px"><strong>FIRE</strong> = Financial Independence, Retire Early.</div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">💸 Pengeluaran/Bulan</span><span class="sg-val" id="fireExpDisplay">Rp 5 Jt</span></div><input type="range" id="fireExp" min="1000000" max="30000000" step="500000" value="5000000"><div class="sg-lims"><span>Rp 1 Jt</span><span>Rp 30 Jt</span></div></div>
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">📅 Usia Sekarang</span><span class="sg-val" id="fireAgeDisplay">25 thn</span></div><input type="range" id="fireAge" min="18" max="55" step="1" value="25"><div class="sg-lims"><span>18 thn</span><span>55 thn</span></div></div>
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">📈 Return/Thn</span><span class="sg-val" id="fireRetDisplay">8%</span></div><input type="range" id="fireRet" min="3" max="20" step="0.5" value="8"><div class="sg-lims"><span>3%</span><span>20%</span></div></div>
+    </div>
+    <div class="fire-result"><div style="font-size:.62rem;font-weight:700;color:var(--orange);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Target Dana FIRE (Rule of 4%)</div><div class="fire-big" id="fireTarget">—</div><div class="fire-sub" id="fireSub">—</div><div class="fire-grid" id="fireGrid"></div></div>
+    <div style="font-size:.62rem;color:var(--t3);text-align:center;margin-top:12px;line-height:1.6">Rule of 4%: tarik 4%/thn dari portfolio → uang tidak habis seumur hidup (Trinity Study, 1998).</div>
+  </div>
+</div>
+
+<!-- COMPARE -->
+<div class="overlay" id="compareOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('compareOverlay').classList.remove('open')">✕</div>
+    <div class="modal-title">⚖️ Bandingkan Semua Instrumen</div>
+    <div style="font-size:.72rem;color:var(--t2);margin-bottom:14px">Ranking dari modal &amp; periode simulasi yang sama.</div>
+    <div class="compare-row" id="compareList"></div>
+  </div>
+</div>
+
+<!-- INFLASI CALC -->
+<div class="overlay" id="inflKalcOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('inflKalcOverlay').classList.remove('open')">✕</div>
+    <div class="modal-title">💸 Kalkulator Daya Beli</div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">💰 Nilai Uang Sekarang</span><span class="sg-val" id="ikalcValDisplay">Rp 1 Jt</span></div><input type="range" id="ikalcVal" min="100000" max="1000000000" step="100000" value="1000000"><div class="sg-lims"><span>Rp 100rb</span><span>Rp 1 M</span></div></div>
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">📅 Tahun ke Depan</span><span class="sg-val" id="ikalcThnDisplay">10 thn</span></div><input type="range" id="ikalcThn" min="1" max="30" step="1" value="10"><div class="sg-lims"><span>1 thn</span><span>30 thn</span></div></div>
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">🌡 Rate Inflasi/Thn</span><span class="sg-val" id="ikalcInfDisplay">4.76%</span></div><input type="range" id="ikalcInf" min="1" max="15" step="0.1" value="4.76"><div class="sg-lims"><span>1%</span><span>15%</span></div></div>
+    </div>
+    <div class="inf-calc-result" id="ikalcResult"><div style="font-size:.62rem;font-weight:700;color:var(--red);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Daya Beli Uang Lo</div><div class="inf-calc-big" id="ikalcBig">—</div><div class="inf-calc-sub" id="ikalcSub">—</div></div>
+    <div style="margin-top:14px;padding:13px;background:var(--green-d);border:1px solid rgba(10,136,68,.2);border-radius:var(--r);font-size:.7rem;color:var(--t2);line-height:1.65" id="ikalcInvestAlt"></div>
+  </div>
+</div>
+
+<!-- SKENARIO -->
+<div class="overlay" id="skenarioOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('skenarioOverlay').classList.remove('open')">✕</div>
+    <div class="modal-title">📊 Simulasi 3 Skenario</div>
+    <div style="font-size:.72rem;color:var(--t2);margin-bottom:16px">Kondisi terbaik, normal, dan terburuk.</div>
+    <div class="sken-grid" id="skenGrid"></div>
+    <div style="margin-top:14px;font-size:.67rem;color:var(--t3);line-height:1.65;padding:11px;background:var(--card2);border-radius:var(--r)" id="skenNote"></div>
+  </div>
+</div>
+
+<!-- GLOSARIUM -->
+<div class="overlay" id="glosariumOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('glosariumOverlay').classList.remove('open')">✕</div>
+    <div class="modal-title">📖 Glosarium Investasi</div>
+    <input class="glo-search" id="gloSearch" placeholder="🔍 Cari istilah... (cth: DCA, NAB)" oninput="filterGlo(this.value)">
+    <div class="glo-list" id="gloList"></div>
+  </div>
+</div>
+
+<!-- REBALANCE -->
+<div class="overlay" id="rebalanceOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('rebalanceOverlay').classList.remove('open')">✕</div>
+    <div class="modal-title">⚖️ Rebalancing Checker</div>
+    <div style="font-size:.72rem;color:var(--t2);margin-bottom:14px">Masukkan alokasi target &amp; aktual — gue kasih tau mana yang perlu diubah!</div>
+    <div class="reb-alloc" id="rebAlloc"></div>
+    <button style="width:100%;border:none;border-radius:14px;padding:14px;background:var(--t1);color:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:14px" onclick="checkRebalance()">⚖️ Cek Rebalancing</button>
+    <div class="reb-result" id="rebResult" style="display:none"></div>
+  </div>
+</div>
+
+<!-- NAB CALC -->
+<div class="overlay" id="nabCalcOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-close" onclick="document.getElementById('nabCalcOverlay').classList.remove('open')">✕</div>
+    <div class="modal-title">📅 Simulasi DCA Rutin</div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">💰 Nabung per Bulan</span><span class="sg-val" id="nabAmtDisplay">Rp 500rb</span></div><input type="range" id="nabAmt" min="50000" max="10000000" step="50000" value="500000"><div class="sg-lims"><span>Rp 50rb</span><span>Rp 10 Jt</span></div></div>
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">⏳ Durasi</span><span class="sg-val" id="nabThnDisplay">10 thn</span></div><input type="range" id="nabThn" min="1" max="30" step="1" value="10"><div class="sg-lims"><span>1 thn</span><span>30 thn</span></div></div>
+      <div class="sg"><div class="sg-row"><span class="sg-lbl">📈 Return/Thn</span><span class="sg-val" id="nabRetDisplay">8%</span></div><input type="range" id="nabRet" min="2" max="20" step="0.5" value="8"><div class="sg-lims"><span>2%</span><span>20%</span></div></div>
+    </div>
+    <div class="nab-result" id="nabResult"><div style="font-size:.62rem;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Hasil DCA Rutin Lo</div><div class="nab-big" id="nabBig">—</div><div class="nab-sub" id="nabSub">—</div></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   PAGE NAVIGATION
+══════════════════════════════════════════ */
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  // hide bot bar on non-kalk pages
+  const bot = document.getElementById('botBar');
+  bot.style.display = name === 'kalk' ? 'flex' : 'none';
+  window.scrollTo(0, 0);
+}
+
+/* ══════════════════════════════════════════
+   SAWERIA
+══════════════════════════════════════════ */
+function openSaweria(amt) {
+  window.open('https://saweria.co/yudprt?amount=' + amt, '_blank');
+}
+function shareApp() {
+  const txt = '📊 InvestCalc by @yud.prt — Kalkulator investasi terlengkap buat Gen Z Indonesia!\n\nDari deposito, SBN, reksa dana, P2P lending, sampai FIRE calculator — semua gratis!\n\n#InvestCalc #InvestasiIndonesia';
+  navigator.clipboard.writeText(txt).then(() => toast('📋 Link disalin! Share ke temen yuk 🚀')).catch(() => {});
+}
+
+/* ══════════════════════════════════════════
+   SYNC botAmt display
+══════════════════════════════════════════ */
+function syncBotDisplay(final, pct, prodName) {
+  // Sync page-hero stat
+  const phPill = document.getElementById('ph-pill');
+  const botAmt = document.getElementById('botAmt');
+  const botAmt2 = document.getElementById('botAmt2');
+  if (phPill) phPill.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+  // botAmt is in the hero stat - update botAmt2 (the one in bot bar)
+  if (botAmt2) botAmt2.textContent = botAmt ? botAmt.textContent : '';
+}
+
+/* ══════════════ DATA ══════════════ */
+const CAT={
+  deposito:{label:'Deposito',icon:'🏦',coretax:'auto',
+    analogy:'<strong>Ibarat lo nitip uang ke bank</strong>, terus bank kasih "upah jaga" tiap tahun. Lo taruh Rp 10 Jt, didiamkan, dan setiap bulan ada uang masuk tanpa ngapa-ngapain. Paling aman karena <strong>dijamin pemerintah lewat LPS sampai Rp 2 Miliar per bank</strong>. Kalau banknya bangkrut pun, uang lo balik.',
+    example:'<strong>Contoh konkret:</strong> Taruh Rp 10.000.000 di Bank Jago (bunga 5.5%/thn) → dapat <strong>Rp 45.833/bulan</strong> otomatis masuk rekening (setelah PPh 20%, neto Rp 36.667/bln). Dalam setahun lo dapat <strong>Rp 440.000 extra</strong> tanpa usaha apapun. Ibarat punya warung yang buka sendiri!',
+    tags:[{l:'Dijamin LPS s.d. Rp 2M',c:'var(--green)',bg:'var(--green-d)'},{l:'Risiko Rendah',c:'var(--teal)',bg:'var(--teal-d)'},{l:'PPh Final 20%',c:'var(--orange)',bg:'var(--orange-d)'}],
+    prods:[
+      {id:'bca',name:'BCA',rate:.0275,rl:'2.75%',rgb:'0,113,227',risk:'Rendah',desc:'Bank Central Asia: bunga 2.75%/thn. Bank swasta terbesar RI, mudah cair, bisa dari BCA Mobile.'},
+      {id:'bri',name:'BRI',rate:.0300,rl:'3.00%',rgb:'0,88,163',risk:'Rendah',desc:'Bank BRI: 3.00%/thn. Tertinggi di bank BUMN. Bisa dibuka via BRImo dari HP.'},
+      {id:'bni',name:'BNI',rate:.0275,rl:'2.75%',rgb:'200,65,30',risk:'Rendah',desc:'Bank BNI: 2.75%/thn. BUMN, jaringan luas, terpercaya.'},
+      {id:'mandiri',name:'Mandiri',rate:.0250,rl:'2.50%',rgb:'0,72,158',risk:'Rendah',desc:'Bank Mandiri: 2.50%/thn. Bank terbesar RI dari sisi total aset.'},
+      {id:'cimb',name:'CIMB',rate:.0425,rl:'4.25%',rgb:'180,20,48',risk:'Rendah',desc:'CIMB Niaga: 4.25%/thn. Salah satu tertinggi untuk bank swasta besar, bisa via CIMB OCTO.'},
+      {id:'jago',name:'Bank Jago',rate:.0550,rl:'5.50%',rgb:'0,148,72',risk:'Rendah',desc:'Bank Jago: 5.50%/thn. Neobank digital Gen Z, zero biaya admin, buka rekening dari HP 5 menit.'},
+    ]},
+  obligasi:{label:'Obligasi',icon:'📜',coretax:'auto',
+    analogy:'<strong>Ibarat lo minjemin uang ke Pemerintah RI</strong> untuk bangun jalan tol, sekolah, dan rumah sakit. Pemerintah "berhutang" ke lo, dan bayar bunga (kupon) tiap bulan + kembalikan modal di akhir tenor. <strong>100% dijamin negara</strong> — paling aman berikutnya setelah deposito, dengan bunga lebih tinggi.',
+    example:'<strong>Contoh konkret:</strong> Beli SR024T3 minimal Rp 1 Juta → dapat kupon 5.55%/thn = <strong>Rp 4.625/bulan</strong> (setelah PPh 10%). Kalau beli Rp 10 Juta → <strong>Rp 46.250/bulan</strong> masuk rekening otomatis tiap bulan selama 3 tahun. Modal balik penuh di akhir. Lebih tinggi dari deposito bank!',
+    tags:[{l:'100% Dijamin Negara',c:'var(--green)',bg:'var(--green-d)'},{l:'Kupon Tetap Tiap Bulan',c:'var(--acc)',bg:'var(--acc-d)'},{l:'PPh Final 10%',c:'var(--orange)',bg:'var(--orange-d)'}],
+    sbn:[
+      {name:'SR024',tenor:'3T 5.55% & 5T 5.90%',status:'aktif',closeDate:new Date('2026-04-15T23:59:59'),syariah:true,desc:'Sukuk Ritel ke-24. Bebas riba (akad ijarah). Min. Rp 1 Jt. Kupon masuk 10 Mei 2026.'},
+      {name:'ST016',tenor:'~2T floating+floor',status:'upcoming',openDate:'Est. Jun 2026',syariah:true,desc:'Sukuk Tabungan. Tidak bisa dijual. Kupon mengambang dengan batas minimum. Min. Rp 1 Jt.'},
+      {name:'ORI030',tenor:'3T & 6T (est.)',status:'upcoming',openDate:'Est. Jul–Agu 2026',syariah:false,desc:'Obligasi Ritel RI ke-30. Kupon tetap, konvensional, 100% dijamin. Min. Rp 1 Jt.'},
+      {name:'SR025',tenor:'3T & 5T (est.)',status:'upcoming',openDate:'Est. Sep–Okt 2026',syariah:true,desc:'Sukuk Ritel ke-25. Estimasi jadwal — ikuti pengumuman resmi DJPPR Kemenkeu.'},
+    ],
+    prods:[
+      {id:'sr024t3',name:'SR024 3T',rate:.0555,rl:'5.55%',rgb:'0,155,90',risk:'Rendah',sbn:true,syariah:true,hot:true,desc:'SR024T3: kupon 5.55%/thn. Tenor 3 tahun, jatuh tempo Mar 2029. Syariah, akad ijarah. AKTIF s.d. 15 Apr 2026!'},
+      {id:'sr024t5',name:'SR024 5T',rate:.0590,rl:'5.90%',rgb:'0,135,75',risk:'Rendah',sbn:true,syariah:true,hot:true,desc:'SR024T5: kupon 5.90%/thn. Tenor 5 tahun, jatuh tempo Mar 2031. Syariah. Return lebih tinggi!'},
+      {id:'ori029t3',name:'ORI029 3T',rate:.0545,rl:'5.45%',rgb:'0,148,72',risk:'Rendah',sbn:true,desc:'ORI029T3: kupon 5.45%/thn bruto. 100% dijamin pemerintah. Bisa dijual di pasar sekunder.'},
+      {id:'ori029t6',name:'ORI029 6T',rate:.0580,rl:'5.80%',rgb:'0,130,85',risk:'Rendah',sbn:true,desc:'ORI029T6: 5.80%/thn bruto. Tenor 6 tahun. Bisa dijual di pasar sekunder.'},
+      {id:'sr023',name:'SR023',rate:.0630,rl:'6.30%',rgb:'0,170,90',risk:'Rendah',sbn:true,syariah:true,desc:'SR023: 6.30%/thn, syariah, bebas riba. Tersedia di pasar sekunder — beli dari investor lain.'},
+      {id:'sbr014',name:'SBR014',rate:.0650,rl:'~6.50%',rgb:'52,170,100',risk:'Rendah',sbn:true,desc:'SBR014: kupon mengambang ~6.50%/thn. Ada floor rate — tetap dapat bunga minimum kalau BI rate turun.'},
+      {id:'st012',name:'ST012',rate:.0590,rl:'5.90%',rgb:'0,160,130',risk:'Rendah',sbn:true,syariah:true,desc:'ST012: Sukuk Tabungan, tidak bisa dijual. Tenor 2 tahun. Kupon floating dengan floor rate.'},
+      {id:'korporasi',name:'Korporasi Grade A',rate:.0800,rl:'7–9%',rgb:'100,60,180',risk:'Sedang',desc:'Obligasi korporasi (TLKM, BBCA, SMRA dll). Return lebih tinggi, ada risiko kredit emiten. Via IPOT/Bareksa.'},
+    ]},
+  reksadana:{label:'Reksa Dana',icon:'📊',coretax:'bebas',
+    analogy:'<strong>Ibarat lo patungan sama ribuan orang lain</strong>, terus duitnya dikelola sama Manajer Investasi (MI) profesional yang udah bersertifikat dari OJK. Lo tidak perlu pusing pilih saham atau obligasi mana — MI yang urus. Nilai investasi lo naik seiring waktu lewat kenaikan NAB (Nilai Aktiva Bersih).',
+    example:'<strong>Contoh konkret:</strong> DCA Rp 200.000/bulan ke Reksa Dana Saham di Bibit (bisa mulai Rp 10.000!). Setelah 10 tahun (total setor Rp 24 Jt), estimasi nilai akhir <strong>Rp 43–52 Juta</strong> (asumsi return 12-14%/thn). Bebas pajak untuk kenaikan NAB! Bisa cair T+3 hari kerja.',
+    tags:[{l:'Dikelola MI Bersertifikat',c:'var(--acc)',bg:'var(--acc-d)'},{l:'Mulai Rp 10.000',c:'var(--green)',bg:'var(--green-d)'},{l:'Bebas PPh (Kenaikan NAB)',c:'var(--teal)',bg:'var(--teal-d)'}],
+    prods:[
+      {id:'pu',name:'Pasar Uang',rate:.055,rl:'~5.5%',rgb:'0,148,72',risk:'Rendah',desc:'RD Pasar Uang: ~5–6%/thn. NAB stabil, cair T+1 hari. Cocok buat parkir dana darurat sambil nunggu peluang investasi lain.'},
+      {id:'pt',name:'Pend. Tetap',rate:.085,rl:'~8.5%',rgb:'0,113,227',risk:'Sedang',desc:'RD Pendapatan Tetap: ~7–10%/thn. 80% portfolio-nya obligasi negara & korporasi. Cocok horizon 2–5 tahun.'},
+      {id:'cam',name:'Campuran',rate:.110,rl:'~11%',rgb:'130,50,195',risk:'Sedang',partVol:true,desc:'RD Campuran: ~10–13%/thn. Mix saham & obligasi, dikelola fleksibel MI. Risiko sedang, return oke.'},
+      {id:'srd',name:'RD Saham',rate:.140,rl:'~14%',rgb:'195,108,0',risk:'Tinggi',partVol:true,desc:'RD Saham: ~12–16%/thn untuk horizon >5 tahun. 80% saham IDX. Return potensial tertinggi tapi paling fluktuatif.'},
+    ]},
+  p2p:{label:'P2P Lending',icon:'🤝',coretax:'lapor',
+    analogy:'<strong>Ibarat lo jadi "bank mini" sendiri</strong> — lo yang memilih siapa yang mau lo pinjami uang via aplikasi. Peminjam (UMKM, individu) bayar bunga ke lo tiap bulan. Return paling tinggi, tapi ada risiko peminjam gagal bayar (default). Wajib sebar ke minimal 50+ pinjaman biar risiko terdiversifikasi!',
+    example:'<strong>Contoh konkret:</strong> Taruh Rp 1.000.000 di Akseleran, bagi ke 50 pinjaman (Rp 20.000 per pinjaman). Return estimasi 13%/thn → <strong>Rp 130.000/thn</strong> per Rp 1 Jt modal. Akseleran punya asuransi 90% pokok. TKB90 = 99.37% (hampir semua pinjaman dibayar). ⚠️ PPh 15% dari bunga wajib dilaporkan di SPT Coretax!',
+    tags:[{l:'Return Paling Tinggi',c:'var(--green)',bg:'var(--green-d)'},{l:'Risiko Gagal Bayar',c:'var(--red)',bg:'var(--red-d)'},{l:'PPh Psl 23 — Wajib Lapor',c:'var(--orange)',bg:'var(--orange-d)'}],
+    prods:[
+      {id:'danamas',name:'Danamas',rate:.120,rl:'10–14%',rgb:'0,130,190',risk:'Sedang',p2p:true,desc:'Danamas (Sinarmas Group): ~10–14%/thn. TKB90 stabil. Pembiayaan produktif & properti.'},
+      {id:'amartha',name:'Amartha',rate:.130,rl:'11–15%',rgb:'0,155,80',risk:'Sedang',p2p:true,desc:'Amartha: ~11–15%/thn. TKB90 mendekati 100%. Fokus UMKM perempuan desa. Model unik & dampak sosial tinggi.'},
+      {id:'akseleran',name:'Akseleran',rate:.135,rl:'12–15%',rgb:'0,100,200',risk:'Sedang',p2p:true,desc:'Akseleran: ~12–15%/thn + asuransi 90% pokok. TKB90 = 99.37%. Salah satu yang paling terpercaya.'},
+      {id:'modalku',name:'Modalku',rate:.160,rl:'15–17%',rgb:'170,50,50',risk:'Tinggi',p2p:true,partVol:true,desc:'Modalku: ~15–17%/thn. Return tertinggi = risiko tertinggi. Wajib diversifikasi ke banyak pinjaman!'},
+    ]},
+  saham:{label:'Saham',icon:'📈',coretax:'auto',
+    analogy:'<strong>Ibarat lo beli kepemilikan kecil sebuah perusahaan</strong> — misalnya beli saham BRI berarti lo jadi "pemilik" BRI versi mini. Kalau BRI makin untung dan makin besar, nilai saham naik. Kalau ada krisis atau perusahaan rugi, nilai bisa turun tajam. <strong>Roller coaster yang paling seru</strong> — tapi paling menguntungkan jangka panjang untuk investor yang sabar.',
+    example:`<strong>📊 Historis Big Bank Indonesia (Feb 2021 → Feb 2026, ~5 tahun):</strong><br>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:6px 0;font-size:.71rem">
+  <div style="background:rgba(0,113,227,.07);border-radius:6px;padding:6px 8px"><strong style="color:rgb(0,113,227)">BBCA (BCA)</strong><br>Rp 6.350 → Rp 8.950<br><span style="color:var(--green)">+41% · dividenden konsisten</span></div>
+  <div style="background:rgba(0,88,163,.07);border-radius:6px;padding:6px 8px"><strong style="color:rgb(0,88,163)">BBRI (BRI)</strong><br>Rp 4.100 → Rp 4.650<br><span style="color:var(--green)">+13% · dividen jumbo tiap tahun</span></div>
+  <div style="background:rgba(200,65,30,.07);border-radius:6px;padding:6px 8px"><strong style="color:rgb(200,65,30)">BBNI (BNI)</strong><br>Rp 6.100 → Rp 5.100<br><span style="color:var(--red)">−17% · tekanan NPL pasca COVID</span></div>
+  <div style="background:rgba(0,72,158,.07);border-radius:6px;padding:6px 8px"><strong style="color:rgb(0,72,158)">BMRI (Mandiri)</strong><br>Rp 7.200 → Rp 6.150<br><span style="color:var(--red)">−15% · meski laba rekord 2024</span></div>
+</div>
+<div style="font-size:.68rem;color:var(--t2);line-height:1.6;margin-top:4px">⚠️ <strong>Pelajaran:</strong> BBCA yang paling "mahal" per lembar ternyata justru terbaik 5 tahun terakhir. BBRI memberikan return total ok lewat dividen besar (yield ~5-6%/thn). Saham bank besar RI cenderung naik jangka panjang tapi bisa stagnan atau turun 2-3 tahun berturut-turut.<br><br>
+🔭 <strong>Outlook ke depan:</strong> Sektor bank RI diproyeksikan tumbuh seiring peningkatan inklusi keuangan, KPR, dan kredit UMKM. BI Rate yang mulai turun dari 2025 = positif untuk NIM bank. Risiko: geopolitik global, rupiah melemah, dan NPL kredit konsumtif. Analisis sendiri sebelum beli — ini bukan rekomendasi! 🙏</div>`,
+    tags:[{l:'Potensi Return Tertinggi',c:'var(--green)',bg:'var(--green-d)'},{l:'Paling Volatil (naik-turun)',c:'var(--red)',bg:'var(--red-d)'},{l:'Horizon >5 Tahun',c:'var(--orange)',bg:'var(--orange-d)'}],
+    prods:[
+      {id:'sim',name:'IDX Simulasi',rate:null,rl:'Acak',rgb:'210,45,35',risk:'Tinggi',vol:true,desc:'Simulasi return acak −10% s.d. +20%/thn, meniru volatilitas IHSG nyata. Historis ~10–15%/thn jangka panjang. Setiap simulasi berbeda — itulah realita saham! Tap ulang untuk hasil baru.'},
+    ]}
+};
+
+const SUGGEST_ALLOC={
+  low:[
+    {pct:40,cat:'deposito',pid:'jago',emoji:'🏦',name:'Deposito Jago'},
+    {pct:35,cat:'obligasi',pid:'sr024t3',emoji:'📜',name:'SR024 3T'},
+    {pct:25,cat:'reksadana',pid:'pu',emoji:'📊',name:'RD Pasar Uang'},
+  ],
+  mid:[
+    {pct:15,cat:'deposito',pid:'jago',emoji:'🏦',name:'Deposito Jago'},
+    {pct:30,cat:'obligasi',pid:'sr024t5',emoji:'📜',name:'SR024 5T'},
+    {pct:30,cat:'reksadana',pid:'pt',emoji:'📊',name:'RD Pend. Tetap'},
+    {pct:25,cat:'reksadana',pid:'cam',emoji:'📈',name:'RD Campuran'},
+  ],
+  high:[
+    {pct:10,cat:'obligasi',pid:'sr024t5',emoji:'📜',name:'SR024 5T'},
+    {pct:25,cat:'reksadana',pid:'cam',emoji:'📊',name:'RD Campuran'},
+    {pct:40,cat:'reksadana',pid:'srd',emoji:'📈',name:'RD Saham'},
+    {pct:25,cat:'p2p',pid:'akseleran',emoji:'🤝',name:'Akseleran P2P'},
+  ],
+};
+
+const CARA_BELI={
+  deposito:{title:'🏦 Cara Beli Deposito',
+    steps:['Pastikan punya rekening tabungan aktif di bank pilihan','Login ke aplikasi mobile banking bank lo','Cari menu "Deposito" atau "Simpanan Berjangka"','Pilih nominal & tenor (minimal Rp 1–8 Jt tergantung bank)','Konfirmasi — deposito langsung aktif! Bunga masuk tiap bulan 🎉'],
+    apps:['BCA Mobile','BRImo','Livin\' Mandiri','CIMB OCTO','Jago'],warn:null},
+  obligasi:{title:'📜 Cara Beli Obligasi SBN',
+    steps:['Download mitra distribusi DJPPR: Bibit, Bareksa, atau Investasi.gov.id','Daftar & verifikasi KTP + selfie (proses KYC sekitar 1×24 jam)','Hubungkan rekening bank aktif lo','Pilih produk SBN → cek tenor, kupon, & tanggal tutup pemesanan','Masukkan nominal (kelipatan Rp 1 Jt) → konfirmasi pesanan','Kupon masuk ke rekening tiap bulan otomatis 💰'],
+    apps:['Bibit','Bareksa','IPOT','Investasi.gov.id','BRI','BNI'],
+    warn:'🔥 SR024 AKTIF sampai 15 April 2026! Jangan sampai ketinggalan!'},
+  reksadana:{title:'📊 Cara Beli Reksa Dana',
+    steps:['Download Bibit, Bareksa, atau IPOT — semua berizin OJK','Registrasi & KYC (upload KTP + foto selfie)','Top up saldo ke rekening dana investasi','Pilih reksa dana sesuai profil risiko lo','Klik Beli, isi nominal (mulai Rp 10.000 di Bibit!)','NAB diupdate tiap hari kerja — cek performa di app 📱'],
+    apps:['Bibit','Bareksa','IPOT','Ajaib','Tokopedia RD'],warn:null},
+  p2p:{title:'🤝 Cara Main P2P Lending',
+    steps:['Download platform OJK berizin: Akseleran, Amartha, atau Danamas','Daftar & verifikasi KTP + foto','Deposit dana ke akun (minimal bervariasi, mulai Rp 100rb)','Pilih pinjaman → lihat profil risiko, tenor, dan platform scoring','WAJIB: Sebar ke minimal 50 pinjaman berbeda! Jangan all-in 1 pinjaman','Bunga masuk seiring cicilan borrower dibayar 💸'],
+    apps:['Akseleran','Amartha','Danamas','Modalku'],
+    warn:'⚠ P2P tidak dijamin LPS. Risiko gagal bayar nyata. Diversifikasi adalah kunci! PPh 15% dari bunga WAJIB dilaporkan di SPT Coretax.'},
+  saham:{title:'📈 Cara Beli Saham IDX',
+    steps:['Download aplikasi sekuritas: Ajaib, IPOT, Stockbit, atau BNI Sekuritas','Registrasi & upload KTP + NPWP (wajib)','Tunggu persetujuan & aktivasi rekening efek (1–3 hari kerja)','Setor dana ke RDN (Rekening Dana Nasabah)','Mulai beli saham! 1 lot = 100 lembar saham','Tips pemula: mulai dari IDX30 atau IDX80 dulu baru eksplor saham individual 📊'],
+    apps:['Ajaib','IPOT','Stockbit','BNI Sekuritas','Mirae Asset'],
+    warn:'Saham untuk jangka panjang (>5 tahun)! Pastikan punya dana darurat 3–6 bulan pengeluaran sebelum invest saham.'},
+};
+
+const TARGETS=[
+  {e:'🏠',l:'Rumah (tipe 36)',p:350e6,desc:'Rumah subsidi/tipe 36 di pinggiran kota besar'},
+  {e:'🏡',l:'Rumah (tipe 60+)',p:700e6,desc:'Rumah menengah tipe 60 ke atas di kota besar'},
+  {e:'🚗',l:'Mobil Baru (LCGC)',p:180e6,desc:'Toyota Agya/Calya atau sejenisnya'},
+  {e:'🚙',l:'Mobil Baru (MPV)',p:350e6,desc:'Avanza, Xpander, atau Ertiga baru'},
+  {e:'🏍',l:'Motor (matic)',p:22e6,desc:'Honda Beat atau Yamaha Mio baru'},
+  {e:'🏍',l:'Motor (sport)',p:40e6,desc:'Honda CB150R atau Yamaha MT-15 baru'},
+  {e:'📱',l:'iPhone terbaru',p:22e6,desc:'iPhone 16 / 16 Pro series'},
+  {e:'💻',l:'MacBook Air',p:18e6,desc:'MacBook Air M3 termurah'},
+  {e:'💻',l:'MacBook Pro',p:30e6,desc:'MacBook Pro 14" M3 Pro'},
+  {e:'✈️',l:'Liburan Eropa',p:35e6,desc:'Tiket PP + hotel + jalan-jalan 2 minggu'},
+  {e:'✈️',l:'Liburan Jepang',p:18e6,desc:'Tiket PP + hotel + jalan-jalan 10 hari'},
+  {e:'💍',l:'Biaya Nikah',p:80e6,desc:'Resepsi sederhana ~100 tamu'},
+  {e:'💍',l:'Nikah Besar',p:200e6,desc:'Resepsi besar 300+ tamu + vendor komplit'},
+  {e:'🎓',l:'S2 Dalam Negeri',p:60e6,desc:'Biaya kuliah S2 di universitas swasta terkemuka'},
+  {e:'🎓',l:'S2 Luar Negeri',p:500e6,desc:'Biaya kuliah + living cost S2 di Malaysia/Thailand'},
+  {e:'🎮',l:'Gaming PC',p:15e6,desc:'PC gaming mid-range dengan monitor'},
+];
+
+const ITEMS=[
+  {e:'📱',l:'iPhone 16 Pro',p:22e6},{e:'☕',l:'Kopi Kekinian',p:45e3},
+  {e:'🎵',l:'Spotify 1 Thn',p:948e3},{e:'✈️',l:'Tiket PP Bali',p:1.2e6},
+  {e:'🎮',l:'PS5',p:7.5e6},{e:'👟',l:'Nike Air Max',p:2.5e6},
+  {e:'🎤',l:'Tiket Konser',p:1.5e6},{e:'🍜',l:'Mie Gacoan',p:22e3},
+  {e:'🏋️',l:'Gym 1 Bln',p:35e4},{e:'🎬',l:'Nonton Bioskop',p:75e3},
+  {e:'🍕',l:'Pizza Hut',p:2e5},{e:'🏍',l:'Motor Beat',p:22e6},
+];
+
+let NISAB=144500000; // 85g × Rp 1.700.000/g, updated live
+const PROFILES={
+  low:{emoji:'🛡️',name:'Konservatif',rec:'Deposito · Obligasi SBN',cats:['deposito','obligasi']},
+  mid:{emoji:'⚖️',name:'Moderat',rec:'Obligasi · Reksa Dana',cats:['obligasi','reksadana']},
+  high:{emoji:'🦁',name:'Agresif',rec:'Reksa Dana Saham · P2P',cats:['reksadana','p2p']},
+};
+const PROFILE_DETAILS={
+  low:{emoji:'🛡️',name:'Konservatif',tag:'Risiko Rendah',tagColor:'var(--teal)',tagBg:'var(--teal-d)',
+    desc:'Lo prioritasin keamanan modal di atas segalanya. Mending dapat return kecil daripada deg-degan lihat portfolio turun.',
+    instruments:['Deposito Bank','Obligasi/SBN','RD Pasar Uang'],
+    detail:'📌 Return: 4–6%/thn · Risiko hilang modal: sangat kecil\n🏦 Deposito dijamin LPS hingga Rp 2M per bank\n📜 Obligasi SBN dijamin 100% pemerintah RI\n😴 Cocok buat yang baru mulai investasi atau untuk dana darurat',
+    cats:['deposito','obligasi']},
+  mid:{emoji:'⚖️',name:'Moderat',tag:'Risiko Sedang',tagColor:'var(--blue)',tagBg:'var(--blue-d)',
+    desc:'Lo bisa tolerir nilai turun sementara demi return yang lebih oke. Mindset jangka menengah 2–5 tahun.',
+    instruments:['Reksa Dana Campuran','Obligasi Korporasi','P2P Lending'],
+    detail:'📌 Return: 7–12%/thn · Ada potensi turun sementara tapi recover\n📊 Reksa Dana dikelola MI profesional, diversifikasi otomatis\n⚖️ Mix instrumen buat balance antara aman dan growth\n📈 Cocok untuk investasi jangka menengah 2–5 tahun',
+    cats:['obligasi','reksadana']},
+  high:{emoji:'🦁',name:'Agresif',tag:'Risiko Tinggi',tagColor:'var(--green)',tagBg:'var(--green-d)',
+    desc:'Lo siap mental lihat portfolio naik-turun tajam. Ngejar return maksimal dengan horizon investasi panjang.',
+    instruments:['Reksa Dana Saham','Saham IDX','P2P Lending'],
+    detail:'📌 Return potensial: 12–18%/thn · Bisa turun 20–30% jangka pendek\n📈 IHSG historis tumbuh 10–15%/thn dalam 20 tahun terakhir\n💪 Penurunan itu normal — yang penting jangan panik dan jual\n⏰ Ideal untuk usia muda dengan horizon investasi >5 tahun',
+    cats:['reksadana','p2p']},
+};
+
+const GLOSARIUM=[
+  {term:'Aset',def:'Segala sesuatu yang punya nilai ekonomi dan dimiliki oleh seseorang atau perusahaan. Bisa berupa uang, properti, saham, obligasi, reksa dana, emas, dll.',ex:'Deposito Rp 10 Jt di BRI = aset. Saham BCA yang lo pegang = aset. Mobil pribadi bisa juga dianggap aset (meski nilainya turun).'},
+  {term:'Bunga / Kupon',def:'Pembayaran rutin dari penerbit kepada pemegang surat utang (obligasi/deposito). Bunga = istilah konvensional. Kupon = istilah resmi untuk obligasi. Biasanya dinyatakan sebagai % per tahun.',ex:'SR024 kupon 5.55%/thn: setiap Rp 1 Jt yang lo taruh, dapat Rp 4.625/bulan (setelah PPh 10%). Deposito BRI 3%/thn: Rp 10 Jt → Rp 25.000/bulan setelah pajak.'},
+  {term:'Compound Interest',def:'Bunga berbunga — keuntungan lo diinvestasikan kembali sehingga keuntungan berikutnya dihitung dari modal + keuntungan sebelumnya. Makin lama makin dahsyat efeknya.',ex:'Rp 10 Jt di deposito 5%/thn: tahun 1 dapat Rp 500rb, tahun 2 dapat Rp 525rb (dari Rp 10.5 Jt), tahun ke-20 dapat Rp 1.26 Jt/thn! Total jadi Rp 26.5 Jt.'},
+  {term:'Dana Darurat',def:'Cadangan uang tunai yang mudah dicairkan, untuk menutup pengeluaran tak terduga (PHK, sakit, kecelakaan) tanpa harus jual investasi rugi.',ex:'Standar: 3 bulan pengeluaran untuk single, 6 bulan untuk yang punya tanggungan. Pengeluaran Rp 3 Jt/bln → dana darurat ideal Rp 9–18 Jt. Simpan di tabungan atau RD Pasar Uang.'},
+  {term:'DCA (Dollar Cost Averaging)',def:'Strategi investasi dengan menyetor uang secara rutin dan konsisten tiap bulan/minggu, berapapun kondisi pasar. Tujuannya meratakan harga beli agar tidak perlu timing pasar.',ex:'Set auto-invest Rp 500rb ke Bibit tiap tanggal 1. Bulan ini NAB RD turun → dapat lebih banyak unit. Bulan depan NAB naik → dapat lebih sedikit unit. Rata-ratanya jadi lebih efisien dari beli sekaligus.'},
+  {term:'Deflasi',def:'Kebalikan inflasi — harga barang dan jasa secara umum turun. Jarang terjadi, tapi bisa berbahaya karena orang menunda beli dan ekonomi melambat.',ex:'Jepang pernah deflasi panjang 1990-an: harga barang turun, tapi orang tetap nahan belanja karena nunggu lebih murah lagi → ekonomi stuck.'},
+  {term:'Diversifikasi',def:'Sebar investasi ke berbagai instrumen, sektor, atau aset supaya risiko tidak terpusat di satu tempat. Prinsip: "Jangan taruh semua telur di satu keranjang."',ex:'Jangan taruh semua uang di 1 saham. Sebar 40% deposito + 30% SBN + 20% reksa dana + 10% P2P. Kalau P2P rugi 50%, sisanya masih aman. Total portofolio hanya turun ~5%.'},
+  {term:'Dividen',def:'Pembagian sebagian keuntungan perusahaan kepada pemegang saham. Biasanya dibayar per kuartal atau per tahun. Bukan kewajiban — tergantung keputusan perusahaan.',ex:'BBRI (BRI) sering bagi dividen. Kalau lo punya 10 lot (1000 lembar) BBRI dan dividen Rp 200/lembar, lo dapat Rp 200.000 cash masuk ke rekening efek lo. Kena PPh Final 10%.'},
+  {term:'FIRE (Financial Independence, Retire Early)',def:'Gerakan finansial dengan tujuan menabung/investasi agresif agar bisa pensiun jauh sebelum usia normal (65 thn). Target: punya portfolio yang cukup besar sehingga 4% ambilan per tahun = biaya hidup.',ex:'Biaya hidup Rp 5 Jt/bln = Rp 60 Jt/thn. Target FIRE = Rp 60 Jt / 4% = Rp 1.5 Miliar. Kalau portfolio lo sudah Rp 1.5 M dengan return 8%, lo bisa hidup dari return tanpa bekerja.'},
+  {term:'Haul',def:'Masa kepemilikan harta selama 1 tahun penuh (hijriah) yang menjadi syarat wajib zakat mal. Kalau harta melebihi nisab DAN sudah dipegang 1 tahun → wajib zakat.',ex:'Lo beli reksa dana Jan 2025. Jan 2026 (setelah 1 tahun/haul) nilainya masih > nisab → wajib bayar zakat mal 2.5% dari total nilai saat itu.'},
+  {term:'IHSG',def:'Indeks Harga Saham Gabungan — indeks yang merangkum pergerakan harga rata-rata semua saham yang terdaftar di Bursa Efek Indonesia (BEI). Benchmark utama pasar saham RI.',ex:'IHSG hari ini 7.200 poin. Tahun lalu 6.800 poin. Naik ~5.9% → artinya rata-rata saham di BEI naik 5.9%. IDX30 = 30 saham terbesar, LQ45 = 45 saham paling likuid.'},
+  {term:'Inflasi',def:'Kenaikan harga barang dan jasa secara umum dan terus-menerus dari waktu ke waktu. Inflasi = daya beli uang berkurang. Target inflasi BI = 1.5–3.5% per tahun.',ex:'Inflasi 4.76%/thn (BPS Feb 2026): Bakso Rp 20.000 hari ini → tahun depan ~Rp 20.952. Dalam 10 tahun, Rp 1 Juta hanya punya daya beli setara Rp 624.000 hari ini!'},
+  {term:'Investasi',def:'Menempatkan uang/sumber daya dengan harapan menghasilkan keuntungan di masa depan. Berbeda dengan menabung (simpan uang, tidak ada pertumbuhan riil melawan inflasi).',ex:'Taruh Rp 10 Jt di deposito = investasi (ada return 3-5%). Simpen di celengan = menabung (nilai riilnya turun karena inflasi). Beli emas = investasi (harga cenderung naik jangka panjang).'},
+  {term:'LPS (Lembaga Penjamin Simpanan)',def:'Badan hukum pemerintah yang menjamin dana nasabah di bank yang bangkrut, hingga Rp 2 Miliar per nasabah per bank. Didirikan 2005 berdasarkan UU No. 24/2004.',ex:'Bank kecil ABC bangkrut. Tabungan lo di sana Rp 500 Jt? LPS yang bayar, aman 100%. Tapi kalau Rp 2.5 M, hanya Rp 2 M yang dijamin — sisanya Rp 500 Jt masuk antrian klaim likuidasi.'},
+  {term:'Likuiditas',def:'Seberapa mudah dan cepat sebuah aset bisa diubah menjadi uang tunai tanpa kehilangan nilai signifikan. Makin likuid = makin gampang cair.',ex:'Tabungan = sangat likuid (tarik kapanpun). Deposito = kurang likuid (ada penalti break sebelum tenor). RD Pasar Uang = cair T+1. Saham = cair T+2. Properti = tidak likuid (bisa berbulan-bulan untuk jual).'},
+  {term:'Manajer Investasi (MI)',def:'Perusahaan berizin OJK yang mengelola dana investasi reksa dana secara profesional. MI memutuskan aset apa yang dibeli/dijual dalam portfolio reksa dana.',ex:'Schroders, Danareksa, Mandiri Investasi = contoh MI ternama di Indonesia. Lo beli RD Manulife, berarti Manulife AM (MI-nya) yang kelola uang lo, pilihkan saham/obligasi, dan lapor ke OJK.'},
+  {term:'Modal / Principal',def:'Uang awal yang lo masukkan ke investasi, sebelum ada keuntungan apapun ditambahkan.',ex:'Lo setor Rp 5 Jt ke reksa dana. DCA Rp 500rb/bln selama 2 tahun → total modal Rp 5 Jt + Rp 12 Jt = Rp 17 Jt. Keuntungan = nilai portfolio − Rp 17 Jt.'},
+  {term:'NAB (Nilai Aktiva Bersih)',def:'Harga per unit reksa dana pada hari tertentu. Dihitung dari total aset RD dibagi jumlah unit beredar. Diupdate setiap hari kerja pukul ~17:00 WIB.',ex:'Beli 1.000 unit RD Saham saat NAB Rp 2.000 = modal Rp 2 Jt. Setahun kemudian NAB jadi Rp 2.400 → nilai portfolio Rp 2.4 Jt. Untung Rp 400.000 (20%). Bebas pajak untuk kenaikan NAB!'},
+  {term:'Nisab',def:'Batas minimum nilai harta yang mewajibkan zakat. Standar Indonesia: setara 85 gram emas untuk zakat mal, nisab/12 untuk zakat penghasilan bulanan.',ex:'Harga emas Mar 2026 ~Rp 1.7 Jt/gram → Nisab = 85 × Rp 1.7 Jt = Rp 144.5 Jt. Aset investasi lo Rp 150 Jt → sudah kena nisab, wajib zakat mal 2.5%/tahun = Rp 3.75 Jt.'},
+  {term:'Obligasi / SBN',def:'Surat utang yang diterbitkan pemerintah (SBN) atau perusahaan. Pembeli = kreditur. Penerbit = debitur yang bayar kupon tiap bulan + kembalikan pokok di akhir tenor.',ex:'Beli ORI030 Rp 5 Jt = lo pinjamin Rp 5 Jt ke pemerintah RI. Kupon 5.5%/thn → Rp 22.916/bulan masuk rekening. Di akhir tenor (3 atau 6 tahun), Rp 5 Jt balik utuh.'},
+  {term:'P2P Lending',def:'Platform yang menghubungkan pemberi pinjaman (investor) langsung dengan peminjam (individu/UMKM) tanpa bank sebagai perantara. Diawasi OJK.',ex:'Lo taruh Rp 2 Jt di Akseleran, dibagi ke 100 pinjaman (Rp 20.000 per pinjaman). Return ~13%/thn. Ada risiko gagal bayar (default), tapi diversifikasi ke banyak pinjaman meminimalkan dampaknya.'},
+  {term:'Pajak (PPh Final)',def:'PPh Final = pajak yang langsung dipotong dari sumber, bersifat "final" — tidak perlu dihitung ulang di SPT Tahunan. Berbeda dengan PPh Pasal 23 yang tidak final (harus dilaporkan).',ex:'PPh Final deposito 20%: bank auto potong. Bunga Rp 100 Jt → diterima Rp 80 Jt. Tidak perlu lapor. PPh Pasal 23 P2P 15%: platform potong, tapi kamu WAJIB lapor di SPT Coretax, lampirkan Bukti Potong.'},
+  {term:'PPh Final',def:'Lihat: Pajak (PPh Final).',ex:'Deposito: PPh Final 20%. Obligasi SBN: PPh Final 10%. Saham (jual): PPh Final 0.1% dari nilai jual. Dividen saham: PPh Final 10%.'},
+  {term:'Reksa Dana',def:'Wadah investasi kolektif yang dikelola oleh Manajer Investasi berizin OJK. Modal semua investor digabung, lalu MI yang investasikan ke pasar — saham, obligasi, pasar uang, atau campuran.',ex:'Beli RD Saham di Bibit Rp 100rb → uang lo masuk pool bersama ribuan investor lain. MI beli campuran saham IDX top. Nilai bergerak sesuai harga saham-saham tersebut. Bebas pajak untuk kenaikan NAB!'},
+  {term:'Return / Imbal Hasil',def:'Keuntungan yang dihasilkan dari investasi, biasanya dinyatakan dalam persen per tahun (% p.a. = per annum). Ada return bruto (sebelum pajak) dan return neto (setelah pajak).',ex:'Deposito BRI 3%/thn bruto. Setelah PPh Final 20% → return neto 2.4%/thn. SR024 5.55%/thn bruto → neto 4.995%/thn (PPh 10%). Reksa Dana Saham ~14%/thn = tidak kena pajak (neto = bruto).'},
+  {term:'Risiko',def:'Kemungkinan nilai investasi turun atau tidak sesuai ekspektasi. High risk = high return potential. Low risk = return lebih rendah tapi lebih stabil. Tidak ada investasi bebas risiko.',ex:'Risiko deposito = sangat rendah (dijamin LPS). Risiko reksa dana saham = tinggi (bisa turun 30% di tahun buruk, tapi bisa naik 40% di tahun bagus). Saham individual = paling tinggi.'},
+  {term:'Saham',def:'Bukti kepemilikan sebagian (fraksi) dari sebuah perusahaan terbuka. Nilainya naik-turun tergantung kinerja perusahaan, sentimen pasar, dan kondisi ekonomi global.',ex:'Beli 1 lot (100 lembar) BBCA seharga Rp 9.500/lembar = modal Rp 950.000. Kalau harga naik ke Rp 11.000 = nilai jadi Rp 1.1 Jt (untung Rp 150rb atau +15.8%). Dapat dividen juga kalau BCA bagi untung.'},
+  {term:'SBN (Surat Berharga Negara)',def:'Instrumen utang yang diterbitkan oleh Pemerintah RI melalui Kemenkeu/DJPPR. 100% dijamin negara. Jenis: ORI (konvensional), SR/ST (syariah), SBR (floating rate), SWN (wholesale).',ex:'ORI030 T3 5.45%: beli minimal Rp 1 Jt, dapat kupon 5.45%/thn = Rp 4.541/bln per Rp 1 Jt. SR024 T3 5.55%: syariah (bebas riba), kupon 5.55%/thn. Semua SBN ritel bisa dibeli via Bibit, Bareksa, atau investasi.gov.id.'},
+  {term:'TKB90',def:'Tingkat Keberhasilan Bayar 90 Hari — indikator kualitas platform P2P Lending. Mengukur persentase pinjaman yang dibayar lunas dalam 90 hari dari jatuh tempo. Wajib dipublikasikan OJK.',ex:'Akseleran TKB90 = 99.37% → dari semua pinjaman yang jatuh tempo, 99.37% dibayar tepat waktu. Semakin tinggi TKB90, semakin terpercaya platformnya. Pilih platform dengan TKB90 minimal 95%.'},
+  {term:'Tenor',def:'Jangka waktu investasi atau pinjaman dari awal hingga tanggal jatuh tempo (maturity). Setelah tenor, pokok investasi dikembalikan.',ex:'Deposito tenor 6 bulan: uang terkunci 6 bulan, kalau break kena penalti bunga. SR024 T3: tenor 3 tahun, jatuh tempo Maret 2029. Setelah itu pokok Rp 1 Jt/lot balik ke rekening lo.'},
+  {term:'Volatilitas',def:'Tingkat fluktuasi harga investasi dalam periode tertentu. Volatilitas tinggi = harga sering naik-turun tajam. Diukur dengan standar deviasi return. Bukan musuh — bisa jadi peluang.',ex:'Saham bisa naik 20% atau turun 30% dalam setahun = volatilitas tinggi. Deposito hampir 0% volatilitas. Reksa dana campuran = volatilitas menengah. Investor agresif memanfaatkan volatilitas saham untuk buy the dip.'},
+  {term:'Yield',def:'Return tahunan dari sebuah investasi dalam persen, biasanya untuk obligasi. Berbeda dari kupon — yield menghitung harga pasar saat ini, bukan harga beli awal.',ex:'Beli ORI030 di pasar sekunder seharga Rp 1.050.000 (above par). Kupon Rp 54.500/thn. Yield = 54.500/1.050.000 = 5.19% — lebih rendah dari kupon 5.45% karena harganya mahal.'},
+].sort((a,b)=>a.term.localeCompare(b.term,'id'));
+
+
+
+const S={
+  modal:10e6,tahun:5,cat:'deposito',pid:'bca',
+  dca:false,dcaAmt:500e3,inflasi:true,pajak:false,
+  infRate:.0476,biRate:.0575,
+  tgtPrice:350e6,tgtLabel:'🏠 Rumah (tipe 36)',
+  profile:null,gaji:5e6,chartMode:'line',
+};
+const PREV={};
+let lastConfetti=null;
+let mainChart=null;
+let NISAB_GOLD_PER_G=1700000;
+
+/* UTILS */
+function rp(n){return'Rp '+Math.round(n).toLocaleString('id-ID');}
+function rpS(n){if(n>=1e12)return'Rp '+(n/1e12).toFixed(1)+'T';if(n>=1e9)return'Rp '+(n/1e9).toFixed(1)+'M';if(n>=1e6)return'Rp '+(n/1e6).toFixed(1)+' Jt';if(n>=1e3)return'Rp '+Math.round(n/1e3)+'rb';return'Rp '+n;}
+function gp(){return CAT[S.cat].prods.find(p=>p.id===S.pid);}
+function taxMult(c){return c==='deposito'?.80:c==='p2p'?.85:c==='obligasi'?.90:1;}
+function taxLabel(c){return c==='deposito'?'Deposito: PPh Final 20% · auto bank · tidak perlu lapor':c==='p2p'?'P2P: PPh Psl 23 · 15% · ⚠️ WAJIB LAPOR di SPT Coretax!':c==='obligasi'?'Obligasi SBN: PPh Final 10% · auto · tidak perlu lapor':'Bebas PPh ✅';}
+function fillSlider(s){if(!s)return;const pct=((+s.value-+s.min)/(+s.max-+s.min)*100);s.style.setProperty('--pct',pct+'%');}
+function setDataStatus(st,msg){const d=document.getElementById('dataDot'),m=document.getElementById('dataStatus');d.className='data-dot '+st;m.textContent=msg;}
+function refreshData(){fetchLiveRates();}
+
+/* SALARY */
+function renderSalary(){
+  const g=S.gaji,need=g*.5,want=g*.3,inv=g*.2;
+  const bd=document.getElementById('salBreakdown');
+  if(!bd)return;
+  bd.innerHTML=`
+    <div class="sb-item">
+      <div class="sb-pct">50%</div>
+      <div class="sb-amt" style="color:var(--t1)">${rpS(need)}</div>
+      <div class="sb-lbl">Kebutuhan pokok<br><span style="font-size:.6rem;color:var(--t3)">Makan, transport, kos, dll</span></div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-pct" style="color:var(--orange)">30%</div>
+      <div class="sb-amt" style="color:var(--orange)">${rpS(want)}</div>
+      <div class="sb-lbl">Lifestyle<br><span style="font-size:.6rem;color:var(--t3)">Hiburan, makan di luar, dll</span></div>
+    </div>
+    <div class="sb-item highlight">
+      <div class="sb-pct" style="color:var(--acc)">20% 💰</div>
+      <div class="sb-amt" style="color:var(--acc)">${rpS(inv)}</div>
+      <div class="sb-lbl"><strong>Uang dingin</strong><br><span style="font-size:.6rem;color:var(--acc)">→ Investasikan ini!</span></div>
+    </div>`;
+  const btn=document.getElementById('salApplyBtn');
+  if(btn)btn.textContent=`💰 Pakai ${rpS(inv)}/bln sebagai DCA`;
+}
+function setFromSalary(){
+  const inv=Math.min(S.gaji*.2,10e6);
+  S.dcaAmt=inv;S.dca=true;
+  const sl=document.getElementById('sDCA');sl.value=inv;fillSlider(sl);
+  document.getElementById('tDCA').checked=true;
+  document.getElementById('dcaPanel').className='coll open';
+  flashVal('vDCA',rpS(inv));compute();
+  toast(`✅ DCA ${rpS(inv)}/bln aktif! Geser ke bawah lihat hasilnya 📊`);
+  // Scroll to hero result so they see the impact immediately
+  setTimeout(()=>document.getElementById('heroCard').scrollIntoView({behavior:'smooth',block:'start'}),300);
+}
+function showSuggest(){
+  const risk=S.profile?.risk||'mid',alloc=SUGGEST_ALLOC[risk],inv=S.gaji*.2,prof=PROFILES[risk];
+  let wRate=0,totPct=0;
+  alloc.forEach(a=>{const prod=CAT[a.cat]?.prods.find(p=>p.id===a.pid);if(prod){wRate+=prod.rate*a.pct;totPct+=a.pct;}});
+  const blend=totPct>0?wRate/totPct:0;
+  document.getElementById('suggestContent').innerHTML=`
+    <div class="modal-title">💡 Saran Alokasi — ${prof.emoji} ${prof.name}</div>
+    <div class="sug-profile"><span class="sug-p-emoji">${PROFILE_DETAILS[risk].emoji}</span><div class="sug-p-info"><div class="sug-p-name">${PROFILE_DETAILS[risk].name}</div><div class="sug-p-sub">Uang dingin: <strong>${rpS(inv)}/bln</strong> (20% dari gaji ${rpS(S.gaji)})</div></div></div>
+    <div class="sug-alloc">${alloc.map(a=>{const prod=CAT[a.cat]?.prods.find(p=>p.id===a.pid);return`<div class="sa-item" onclick="setFromSuggest('${a.cat}','${a.pid}')"><div class="sa-pct">${a.pct}%</div><div class="sa-info"><div class="sa-name">${a.emoji} ${a.name}</div><div class="sa-rate">~${prod?.rl||'—'} p.a. · ${rpS(inv*a.pct/100)}/bln</div></div><div class="sa-amt">${rpS(inv*a.pct/100)}</div></div>`;}).join('')}</div>
+    <div class="sug-blend"><div class="sug-blend-rate">${(blend*100).toFixed(2)}%/thn</div><div class="sug-blend-lbl">Estimasi blended return alokasi ini</div></div>
+    <button class="sug-cta" onclick="applyFirstSuggest('${risk}')">Simulasiin Instrumen Pertama →</button>
+    <div style="font-size:.65rem;color:var(--t3);text-align:center;margin-top:9px;line-height:1.6">Tap item untuk simulasi instrumen tersebut. Bukan saran investasi resmi.</div>`;
+  document.getElementById('suggestOverlay').classList.add('open');
+}
+function setFromSuggest(cat,pid){S.cat=cat;S.pid=pid;renderCats();renderExp();renderGrid();compute();document.getElementById('suggestOverlay').classList.remove('open');toast('✅ Diset ke '+gp()?.name);}
+function applyFirstSuggest(risk){const a=SUGGEST_ALLOC[risk]?.[0];if(a)setFromSuggest(a.cat,a.pid);}
+
+/* CARA BELI */
+let activeCBCat=null;
+function renderCarabeli(){
+  const grid=document.getElementById('carabeliGrid');if(!grid)return;grid.innerHTML='';
+  Object.entries(CAT).forEach(([id,c])=>{
+    const d=CARA_BELI[id];if(!d)return;
+    const btn=document.createElement('button');
+    btn.style.cssText="border:1.5px solid var(--sep);border-radius:14px;padding:12px 10px;background:var(--card);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;width:100%";
+    btn.innerHTML=`<div style="font-size:1.25rem;margin-bottom:6px">${c.icon}</div><div style="font-size:.82rem;font-weight:800;color:var(--t1);margin-bottom:2px">${c.label}</div><div style="font-size:.64rem;color:var(--t3);line-height:1.4">${d.apps.slice(0,3).join(' · ')}</div>`;
+    btn.onclick=()=>showCarabeliInline(id,btn);
+    grid.appendChild(btn);
+  });
+}
+function showCarabeliInline(cat,btn){
+  const d=CARA_BELI[cat];if(!d)return;
+  const det=document.getElementById('carabeliDetail');
+  // Toggle off if same
+  if(activeCBCat===cat){activeCBCat=null;det.style.display='none';document.querySelectorAll('#carabeliGrid button').forEach(b=>b.style.borderColor='var(--sep)');return;}
+  activeCBCat=cat;
+  document.querySelectorAll('#carabeliGrid button').forEach(b=>b.style.borderColor='var(--sep)');
+  btn.style.borderColor=`var(--acc)`;
+  det.style.display='block';
+  det.innerHTML=`
+    <div style="background:var(--card);border-radius:var(--rl);padding:16px;box-shadow:var(--sh);border:1px solid var(--sep2)">
+      <div style="font-size:.9rem;font-weight:800;color:var(--t1);margin-bottom:10px">${d.title}</div>
+      ${d.warn?`<div class="cb-warn">${d.warn}</div>`:''}
+      <div style="font-size:.67rem;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Langkah-langkah</div>
+      ${d.steps.map((s,i)=>`<div class="cb-step"><div class="cb-num">${i+1}</div><div class="cb-text">${s}</div></div>`).join('')}
+      <div style="font-size:.67rem;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin:10px 0 6px">📱 Aplikasi Resmi OJK</div>
+      <div class="cb-apps">${d.apps.map(a=>`<span class="cb-app">${a}</span>`).join('')}</div>
+    </div>`;
+  det.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ANIM */
+function animateNum(id,to,fmt=rpS){
+  const el=document.getElementById(id);if(!el)return;
+  const from=PREV[id]||0;PREV[id]=to;
+  if(Math.abs(to-from)<1){el.textContent=fmt(to);return;}
+  const t0=performance.now(),dur=550;
+  function step(now){const p=Math.min((now-t0)/dur,1),e=1-Math.pow(1-p,3);el.textContent=fmt(from+(to-from)*e);if(p<1)requestAnimationFrame(step);else el.textContent=fmt(to);}
+  requestAnimationFrame(step);
+}
+function flashVal(id,txt){const el=document.getElementById(id);if(!el)return;el.textContent=txt;el.classList.add('flash');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('flash'),400);}
+
+/* DARK MODE */
+function toggleDark(){const isLight=document.documentElement.hasAttribute('data-light');if(isLight)document.documentElement.removeAttribute('data-light');else document.documentElement.setAttribute('data-light','');document.getElementById('dmBtn').textContent=isLight?'☀️':'🌙';initChart();compute();}
+
+/* ACCENT */
+function setAcc(rgb){['--acc','--acc-r','--acc-d'].forEach((v,i)=>document.documentElement.style.setProperty(v,[`rgb(${rgb})`,rgb,`rgba(${rgb},.1)`][i]));document.querySelectorAll('input[type=range]').forEach(fillSlider);}
+
+/* LIVE DATA */
+async function fetchLiveRates(){
+  setDataStatus('loading','Memuat data live...');
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:`Search for current Indonesian bank deposit rates, harga emas per gram rupiah today, and investment rates today ${new Date().toLocaleDateString('id-ID')}. Return ONLY valid JSON no markdown: {"deposito":{"bca":2.75,"bri":3.00,"bni":2.75,"mandiri":2.50,"cimb":4.25,"jago":5.50},"obligasi":{"sr024t3":5.55,"sr024t5":5.90,"ori029t3":5.45,"ori029t6":5.80,"sr023":6.30,"sbr014":6.50,"st012":5.90,"korporasi":8.00},"reksadana":{"pu":5.5,"pt":8.5,"cam":11,"srd":14},"p2p":{"danamas":12,"amartha":13,"akseleran":13.5,"modalku":16},"inflasi":4.76,"bi_rate":5.75,"gold_price_per_gram":1700000,"updated":"Mar 2026"}`}]})});
+    const data=await res.json();
+    const texts=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=texts.match(/\{[\s\S]*?\}/);
+    if(m){const r=JSON.parse(m[0]);applyLiveRates(r);setDataStatus('live',`✅ Data live · ${r.updated||'Hari ini'}`);return;}
+  }catch(e){}
+  setDataStatus('offline','📌 Offline · Data: Mar 2026 (tap 🔄 refresh)');
+}
+function applyLiveRates(r){
+  if(r.deposito){Object.entries({bca:'bca',bri:'bri',bni:'bni',mandiri:'mandiri',cimb:'cimb',jago:'jago'}).forEach(([k,id])=>{if(r.deposito[k]){const p=CAT.deposito.prods.find(x=>x.id===id);if(p){p.rate=r.deposito[k]/100;p.rl=r.deposito[k].toFixed(2)+'%';}}});}
+  if(r.obligasi){Object.entries({sr024t3:'sr024t3',sr024t5:'sr024t5',ori029t3:'ori029t3',ori029t6:'ori029t6',sr023:'sr023',sbr014:'sbr014',st012:'st012',korporasi:'korporasi'}).forEach(([k,id])=>{if(r.obligasi[k]){const p=CAT.obligasi.prods.find(x=>x.id===id);if(p){p.rate=r.obligasi[k]/100;p.rl=r.obligasi[k].toFixed(2)+'%';}}});}
+  if(r.reksadana){Object.entries({pu:'pu',pt:'pt',cam:'cam',srd:'srd'}).forEach(([k,id])=>{if(r.reksadana[k]){const p=CAT.reksadana.prods.find(x=>x.id===id);if(p){p.rate=r.reksadana[k]/100;p.rl='~'+r.reksadana[k]+'%';}}});}
+  if(r.inflasi){S.infRate=r.inflasi/100;document.getElementById('infDisplay').textContent=r.inflasi.toFixed(2)+'%';document.getElementById('vsInfV').textContent=r.inflasi.toFixed(2)+'%';}
+  if(r.bi_rate){S.biRate=r.bi_rate/100;const e=document.getElementById('biRateDisplay');if(e)e.textContent=r.bi_rate.toFixed(2)+'%';}
+  if(r.gold_price_per_gram){NISAB_GOLD_PER_G=r.gold_price_per_gram;NISAB=Math.round(85*r.gold_price_per_gram);}
+  renderGrid();compute();
+}
+
+/* RENDER CATS */
+function renderCats(){
+  const bar=document.getElementById('catBar');bar.innerHTML='';
+  Object.entries(CAT).forEach(([id,c])=>{const b=document.createElement('button');b.className='cat-chip'+(S.cat===id?' on':'');b.innerHTML=c.icon+' '+c.label;b.onclick=()=>{S.cat=id;S.pid=CAT[id].prods[0].id;renderCats();renderExp();renderGrid();compute();};bar.appendChild(b);});
+}
+function renderExp(){
+  const c=CAT[S.cat];
+  const ctMap={auto:'🤖 Coretax Auto',lapor:'⚠️ Coretax Lapor',bebas:'✅ Bebas PPh'};
+  const ctCls={auto:'auto',lapor:'lapor',bebas:'bebas'};
+  const ct=c.coretax||'bebas';
+  const tags=c.tags.map(t=>`<span class="exp-tag" style="color:${t.c};background:${t.bg};border:1px solid ${t.c}20">${t.l}</span>`).join('');
+  let sbnHtml='';
+  if(c.sbn){
+    const now=new Date();
+    sbnHtml=`<div class="sbn-embed"><div class="sbn-embed-ttl">📅 Jadwal SBN 2026</div>${c.sbn.map(s=>{
+      const isAktif=s.status==='aktif';
+      let right=isAktif&&s.closeDate
+        ?`<div class="sbn-days aktif">${Math.max(0,Math.ceil((s.closeDate-now)/(864e5)))} hari lagi</div><div class="sbn-rate">Tutup ${s.closeDate.toLocaleDateString('id-ID',{day:'numeric',month:'short'})}</div>`
+        :`<div class="sbn-days upcoming">${s.openDate}</div><div class="sbn-rate">Coming soon</div>`;
+      return`<div class="sbn-row"><div class="sbn-dot ${s.status}"></div><div class="sbn-info"><div class="sbn-name">${s.name}${isAktif?'<span class="badge b-sbn" style="font-size:.52rem">BELI SEKARANG</span>':''}${s.syariah?'<span class="badge b-sya">Syariah</span>':''}</div><div class="sbn-sub">${s.tenor}</div><div class="sbn-sub" style="margin-top:2px">${s.desc}</div></div><div class="sbn-right">${right}</div></div>`;
+    }).join('')}</div>`;
+  }
+  document.getElementById('explainer').innerHTML=`
+    <div class="exp-head"><span>${c.icon} ${c.label}</span><span class="exp-coretax ${ctCls[ct]}">${ctMap[ct]}</span></div>
+    <div class="exp-analogy">${c.analogy}</div>
+    <div class="exp-example">${c.example}</div>
+    <div class="exp-tags">${tags}</div>${sbnHtml}`;
+}
+function renderGrid(){
+  const g=document.getElementById('pgrid'),ps=CAT[S.cat].prods;
+  g.style.gridTemplateColumns=ps.length===1?'1fr':'1fr 1fr';g.innerHTML='';
+  ps.forEach(p=>{
+    const sel=p.id===S.pid,d=document.createElement('div');d.className='pc'+(sel?' sel':'');d.style.cssText=`--c-rgb:${p.rgb}`;
+    let b='';if(p.sbn)b+=`<span class="badge b-sbn">SBN</span>`;if(p.syariah)b+=`<span class="badge b-sya">Syariah</span>`;if(p.hot)b+=`<span class="badge b-hot">🔥 Aktif</span>`;
+    d.innerHTML=`<div class="pc-name">${p.name}${b}</div><div class="pc-rate" style="color:rgb(${p.rgb})">${p.rl}${p.rl!=='Acak'?' p.a.':''}</div><div class="pc-meta"><span class="pc-dot" style="background:rgb(${p.rgb})"></span>${p.risk}</div>`;
+    d.onclick=()=>{S.pid=p.id;renderGrid();updateMeta();compute();};g.appendChild(d);
+  });
+  updateMeta();
+  const p=gp();const ws=document.getElementById('wstrip');ws.style.display=(p&&(p.vol||p.partVol))?'block':'none';ws.onclick=()=>compute();
+}
+function updateMeta(){
+  const p=gp();if(!p)return;setAcc(p.rgb);
+  document.getElementById('insightCard').style.borderLeftColor=`rgb(${p.rgb})`;
+  document.querySelectorAll('.ins-dot').forEach(d=>d.style.background=`rgb(${p.rgb})`);
+  const hasTax=['deposito','obligasi','p2p'].includes(S.cat);
+  document.getElementById('pajakRow').style.opacity=hasTax?'1':'0.45';
+  document.getElementById('pajakRow').style.pointerEvents=hasTax?'':'none';
+  document.getElementById('pajakSub').textContent=taxLabel(S.cat);
+}
+
+/* INFLASI SELECT */
+function selInf(el){document.querySelectorAll('.ip').forEach(p=>p.classList.remove('on'));el.classList.add('on');S.infRate=+el.dataset.inf;document.getElementById('infDisplay').textContent=(S.infRate*100).toFixed(2)+'%';document.getElementById('vsInfV').textContent=(S.infRate*100).toFixed(2)+'%';compute();}
+
+/* RATE HELPERS */
+function getRates(p,n){if(!p)return Array(n).fill(0);if(p.vol)return Array.from({length:n},()=>-.10+Math.random()*.30);if(p.partVol)return Array.from({length:n},()=>p.rate+(Math.random()-.5)*.10);return Array(n).fill(p.rate);}
+function yearlyVals(modal,rates,dca,pajak,cat){
+  const tm=pajak?taxMult(cat):1,vals=[modal];let cur=modal,tot=modal;
+  for(let y=0;y<rates.length;y++){const r=rates[y]*tm,rm=Math.pow(1+r,1/12)-1;const dcaFV=dca>0&&rm>0?dca*(Math.pow(1+rm,12)-1)/rm:dca*12;cur=cur*(1+r)+dcaFV;tot+=dca*12;vals.push(cur);}
+  return{vals,tot,final:cur};
+}
+
+/* CHART */
+function setChartMode(mode){S.chartMode=mode;document.getElementById('ctLine').classList.toggle('on',mode==='line');document.getElementById('ctStack').classList.toggle('on',mode==='stack');const nt=document.getElementById('chNote');const ll=document.getElementById('chLineLegend');if(nt)nt.style.display=mode==='stack'?'block':'none';if(ll)ll.style.display=mode==='line'?'block':'none';initChart();compute();}
+function initChart(){
+  if(mainChart){mainChart.destroy();mainChart=null;}
+  const dk=!document.documentElement.hasAttribute('data-light');
+  const gc=dk?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
+  const zeroLineColor=dk?'rgba(255,255,255,.2)':'rgba(0,0,0,.2)';
+  const ctx=document.getElementById('mainChart').getContext('2d');
+  const tooltipBase={backgroundColor:dk?'#1c1c1e':'#fff',borderColor:'rgba(128,128,128,.2)',borderWidth:1,titleColor:dk?'#f5f5f7':'#636366',bodyColor:dk?'#f5f5f7':'#1c1c1e',bodyFont:{family:'JetBrains Mono',size:11},titleFont:{family:'Plus Jakarta Sans',size:10},padding:10,cornerRadius:10};
+  if(S.chartMode==='stack'){
+    // Stack mode: show Rp values (modal + profit)
+    mainChart=new Chart(ctx,{type:'bar',data:{labels:[],datasets:[
+      {label:'Modal Disetor',data:[],backgroundColor:`rgba(0,122,255,.5)`,borderRadius:3,stack:'a'},
+      {label:'Profit/Return',data:[],backgroundColor:`rgba(26,145,64,.65)`,borderRadius:3,stack:'a'},
+    ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:350},
+      plugins:{legend:{display:true,labels:{usePointStyle:true,pointStyle:'rect',font:{family:'Plus Jakarta Sans',size:10},color:dk?'#8e8e93':'#aeaeb2',padding:12,boxWidth:10}},tooltip:{...tooltipBase,callbacks:{label:i=>' '+i.dataset.label+': '+rpS(i.raw)}}},
+      scales:{x:{stacked:true,grid:{color:gc,drawBorder:false},ticks:{color:dk?'#8e8e93':'#aeaeb2',font:{family:'JetBrains Mono',size:9},maxTicksLimit:7}},
+        y:{stacked:true,grid:{color:gc,drawBorder:false},ticks:{color:dk?'#8e8e93':'#aeaeb2',font:{family:'JetBrains Mono',size:9},callback:v=>rpS(v)}}}}});
+  }else{
+    // Line mode: REBASED to % change from modal awal
+    // This way: kalah inflasi = garis daya beli TURUN KE BAWAH 0% (jelas banget!)
+    mainChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[
+      // ds[0] = % nominal growth (biru, fill above 0)
+      {label:'Return Nominal (%)',data:[],borderColor:'#007aff',
+        backgroundColor:(ctx2)=>{const g=ctx2.chart.ctx.createLinearGradient(0,0,0,ctx2.chart.height);g.addColorStop(0,'rgba(0,122,255,.18)');g.addColorStop(1,'rgba(0,122,255,.01)');return g;},
+        borderWidth:2.5,fill:'origin',tension:.4,pointRadius:3,pointHoverRadius:7,
+        pointBackgroundColor:'#007aff',pointBorderColor:'#fff',pointBorderWidth:1.5},
+      // ds[1] = % real growth (daya beli) — KEY LINE, bold orange/red if negative
+      {label:'Daya Beli Riil (%)',data:[],borderColor:'rgba(201,107,0,.9)',
+        backgroundColor:'transparent',borderDash:[],borderWidth:2.5,
+        fill:false,tension:.4,pointRadius:3,pointHoverRadius:7,
+        pointBackgroundColor:'rgba(201,107,0,.9)',pointBorderColor:'#fff',pointBorderWidth:1.5},
+    ]},options:{responsive:true,maintainAspectRatio:false,
+      animation:{duration:450,easing:'easeInOutCubic'},
+      plugins:{legend:{display:true,labels:{usePointStyle:true,pointStyle:'circle',
+          font:{family:'Plus Jakarta Sans',size:10},color:dk?'#8e8e93':'#aeaeb2',padding:12,boxWidth:8}},
+        tooltip:{...tooltipBase,callbacks:{label:i=>' '+i.dataset.label+': '+(i.raw>=0?'+':'')+i.raw.toFixed(1)+'%'}}},
+      scales:{
+        x:{grid:{color:gc,drawBorder:false},ticks:{color:dk?'#8e8e93':'#aeaeb2',font:{family:'JetBrains Mono',size:9},maxTicksLimit:7}},
+        y:{
+          afterBuildTicks:(ax)=>{if(!ax.ticks.find(t=>t.value===0))ax.ticks.push({value:0});ax.ticks.sort((a,b)=>a.value-b.value);},
+          ticks:{color:dk?'#8e8e93':'#aeaeb2',font:{family:'JetBrains Mono',size:9},callback:v=>v+'%'},
+          grid:{color:(ctx2)=>ctx2.tick.value===0?zeroLineColor:gc,lineWidth:(ctx2)=>ctx2.tick.value===0?2:1,drawBorder:false},
+        }}}});
+  }
+}
+
+/* COMPUTE */
+function compute(){
+  const p=gp();if(!p)return;
+  const{modal,tahun,dca,dcaAmt,inflasi,pajak,infRate}=S,pm=dca?dcaAmt:0;
+  const rates=getRates(p,tahun),{vals,tot,final}=yearlyVals(modal,rates,pm,pajak,S.cat);
+  const labels=['Awal',...Array.from({length:tahun},(_,i)=>'Th '+(i+1))];
+  const realVals=vals.map((v,i)=>v/Math.pow(1+infRate,i));
+  const cashVals=Array.from({length:tahun+1},(_,i)=>modal/Math.pow(1+infRate,i)); // daya beli cash, shrinks by inflation each year
+  const untung=final-tot,pct=(untung/tot)*100,avgR=rates.reduce((a,b)=>a+b,0)/tahun;
+  const avgNeto=pajak?avgR*taxMult(S.cat):avgR,realRet=((1+avgNeto)/(1+infRate)-1)*100;
+  setAcc(p.rgb);
+  animateNum('heroAmt',final,rp);
+  let prodLabel=`${p.name} · ${p.rl}${p.rl!=='Acak'?' p.a.':''}`;
+  if(pajak&&S.cat==='deposito')prodLabel+=' · stlh PPh 20%';
+  else if(pajak&&S.cat==='p2p')prodLabel+=' · stlh PPh 15%';
+  else if(pajak&&S.cat==='obligasi')prodLabel+=' · stlh PPh 10%';
+  if(dca)prodLabel+=` · +${rpS(dcaAmt)}/bln`;
+  document.getElementById('heroProd').textContent=prodLabel;
+  const re=document.getElementById('heroReal');
+  if(inflasi){re.textContent=`✦ Nilai riil (−inflasi ${(infRate*100).toFixed(2)}%): ${rp(realVals[tahun])}`;re.className='hero-real on';}else re.className='hero-real';
+  const pi=document.getElementById('heroPill');pi.textContent=(pct>=0?'▲ +':'▼ ')+pct.toFixed(2)+'% dari total modal';pi.className='pill '+(pct>=0?'pos':'neg');
+  animateNum('mUntung',Math.abs(untung),n=>(untung<0?'−':'')+rpS(n));
+  animateNum('mSetor',tot);document.getElementById('mDurasi').textContent=tahun+' Thn';
+  flashVal('stRA',(avgNeto*100).toFixed(2)+'%');flashVal('stKali',(final/modal).toFixed(2)+'×');
+  if(!mainChart)return;
+  mainChart.data.labels=labels;
+  if(S.chartMode==='stack'){
+    const setorVals=Array.from({length:tahun+1},(_,i)=>S.modal+(S.dca?S.dcaAmt*12*i:0));
+    mainChart.data.datasets[0].data=setorVals;mainChart.data.datasets[0].backgroundColor=`rgba(${p.rgb},.45)`;
+    mainChart.data.datasets[1].data=vals.map((v,i)=>Math.max(0,v-setorVals[i]));
+  }else{
+    const ds=mainChart.data.datasets;
+    // Rebase semua ke % dari modal awal: 0% = titik awal, positif=untung, negatif=rugi daya beli
+    const nominalPct=vals.map(v=>+((v/modal-1)*100).toFixed(2));
+    const realPct=realVals.map(v=>+((v/modal-1)*100).toFixed(2));
+    // Warna garis daya beli: merah kalau akhirnya negatif, hijau kalau positif
+    const realColor=realPct[realPct.length-1]<0?'rgba(212,43,34,.95)':'rgba(26,145,64,.95)';
+    ds[0].data=nominalPct;
+    ds[0].borderColor=`rgb(${p.rgb})`;
+    ds[0].pointBackgroundColor=`rgb(${p.rgb})`;
+    ds[0].backgroundColor=(ctx2)=>{const g=ctx2.chart.ctx.createLinearGradient(0,0,0,ctx2.chart.height);g.addColorStop(0,`rgba(${p.rgb},.18)`);g.addColorStop(1,`rgba(${p.rgb},.01)`);return g;};
+    ds[1].data=S.inflasi?realPct:[];
+    ds[1].borderColor=realColor;
+    ds[1].pointBackgroundColor=realColor;
+    ds[1].hidden=!S.inflasi;
+  }
+  mainChart.update();
+  const ivE=document.getElementById('vsInvV');ivE.textContent=(avgNeto*100).toFixed(2)+'%';ivE.style.color=`rgb(${p.rgb})`;
+  document.getElementById('vsInvS').textContent=pajak?'Return neto/thn':'Return bruto/thn';
+  const rvE=document.getElementById('vsRealV');rvE.textContent=(realRet>=0?'+':'')+realRet.toFixed(2)+'%';
+  if(realRet>0){document.getElementById('vsReal').className='vs-col win';document.getElementById('vsInv').className='vs-col win';rvE.style.color='var(--green)';document.getElementById('verdict').innerHTML=`🏆 <strong>${p.name}</strong> menang vs inflasi! Nilai nominal <em>naik</em>, daya beli juga <em>naik</em> +${realRet.toFixed(2)}%/thn setelah inflasi. Modal lo benar-benar bertumbuh riil! 💪`;}
+  else{document.getElementById('vsReal').className='vs-col los';document.getElementById('vsInv').className='vs-col los';rvE.style.color='var(--red)';document.getElementById('verdict').innerHTML=`😬 Nilai nominal memang naik (grafik biru naik), tapi <strong>daya beli turun</strong> ${Math.abs(realRet).toFixed(2)}%/thn! Return ${(avgNeto*100).toFixed(2)}% < inflasi ${(infRate*100).toFixed(2)}%. Grafik abu turun ke bawah garis merah. Pertimbangkan instrumen return lebih tinggi!`;}
+  const kasurFinal=modal/Math.pow(1+infRate,tahun); // daya beli Rp modal jika disimpan cash, setelah inflasi
+  animateNum('kasurInvest',final,rp);document.getElementById('kasurInvPct').textContent=`+${pct.toFixed(1)}% total`;
+  animateNum('kasurCash',kasurFinal,rp);document.getElementById('kasurCashPct').textContent=`Daya beli susut ${((1-kasurFinal/modal)*100).toFixed(1)}%`;
+  document.getElementById('kasurNote').innerHTML=`Dalam <strong>${tahun} tahun</strong>, investasi di ${p.name} bikin lo punya <strong style="color:rgb(${p.rgb})">${rp(final-kasurFinal)} lebih banyak</strong> dibanding cash doang. Worth it! 💪`;
+  computeKapanBeli(modal,rates,pm,pajak);
+  buildTimeline(modal,rates,pm,pajak);
+  computeAnalogi(untung,p);
+  computeVibe(p,realRet,pct,tahun,dca,pajak);
+  computeInsight(p,avgNeto,realRet,pct,final/modal,final,modal,tot,tahun,infRate,pajak,dca,dcaAmt);
+  computeZakat(final,tahun);
+  if(realRet>0&&lastConfetti!=='win'){lastConfetti='win';launchConfetti();}else if(realRet<=0)lastConfetti='lose';
+  document.getElementById('botProd').textContent=`${p.name} · ${p.rl}${p.rl!=='Acak'?' p.a.':''}`;
+  document.getElementById('botAmt').textContent=rpS(final);const _ba2=document.getElementById('botAmt2');if(_ba2)_ba2.textContent=rpS(final);
+  const bp=document.getElementById('botPill');bp.textContent=(pct>=0?'▲ +':'▼ ')+pct.toFixed(2)+'%';bp.className='pill '+(pct>=0?'pos':'neg');bp.style.marginBottom='0';
+}
+
+/* KAPAN BELI */
+function yearsToTarget(modal,rate,dca,tgt){let cur=modal;for(let y=0;y<=50;y++){if(cur>=tgt)return y;const r=rate*(S.pajak?taxMult(S.cat):1),rm=Math.pow(1+r,1/12)-1;const dcaFV=dca>0&&rm>0?dca*(Math.pow(1+rm,12)-1)/rm:dca*12;cur=cur*(1+r)+dcaFV;}return null;}
+function reqDCA(modal,rate,tgt,years){const r=rate*(S.pajak?taxMult(S.cat):1),rm=Math.pow(1+r,1/12)-1,n=years*12;const pv=modal*Math.pow(1+r,years);if(rm<=0)return Math.max((tgt-modal)/n,0);return Math.max((tgt-pv)/((Math.pow(1+rm,n)-1)/rm),0);}
+function computeKapanBeli(modal,rates,pm,pajak){
+  const avgR=rates.reduce((a,b)=>a+b,0)/rates.length,tgt=S.tgtPrice;
+  const yrs=yearsToTarget(modal,avgR,pm,tgt),dca2=reqDCA(modal,avgR,tgt,2),dca5=reqDCA(modal,avgR,tgt,5);
+  document.getElementById('tgtResult').style.display='block';
+  document.getElementById('tgtItemName').textContent=S.tgtLabel;
+  document.getElementById('tgtPriceTag').textContent='Harga estimasi: '+rp(tgt);
+  if(yrs===0){
+    document.getElementById('tgtYears').textContent='Lo udah bisa beli sekarang! 🎉';
+    document.getElementById('tgtDesc').textContent=`Modal awal ${rp(modal)} sudah melampaui harga ${rp(tgt)}. Bisa langsung beli!`;
+  } else if(yrs===null){
+    document.getElementById('tgtYears').textContent='> 50 Tahun 😅';
+    document.getElementById('tgtDesc').innerHTML=`Dengan DCA ${rpS(pm)}/bln dan return ${(avgR*100).toFixed(1)}%/thn, modal belum cukup dalam 50 tahun.<br>Coba tambah DCA atau pilih instrumen lebih agresif.`;
+  } else {
+    document.getElementById('tgtYears').textContent=yrs+' Tahun lagi ⏳';
+    document.getElementById('tgtDesc').innerHTML=`Modal <strong>${rp(modal)}</strong> + ${pm>0?`DCA <strong>${rpS(pm)}/bln</strong> + `:''}return <strong>${(avgR*100).toFixed(1)}%/thn</strong> (${gp()?.name}) → cukup beli sekitar <strong>${new Date().getFullYear()+yrs}</strong>.`;
+  }
+  // DCA cards: how much EXTRA to save monthly FROM NOW to hit target in X years
+  document.getElementById('tgtDca2').textContent=dca2>0?rpS(Math.ceil(dca2/1e4)*1e4):'Modal sudah cukup! 🎉';
+  document.getElementById('tgtDca5').textContent=dca5>0?rpS(Math.ceil(dca5/1e4)*1e4):'Modal sudah cukup! 🎉';
+}
+function renderTargets(){
+  const row=document.getElementById('targetRow');row.innerHTML='';
+  TARGETS.forEach((t,i)=>{const b=document.createElement('button');b.className='tgt-chip'+(i===0?' on':'');b.innerHTML=`${t.e} ${t.l}`;b.title=t.desc;b.onclick=()=>{S.tgtPrice=t.p;S.tgtLabel=t.e+' '+t.l;document.querySelectorAll('.tgt-chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');compute();};row.appendChild(b);});
+}
+
+/* TIMELINE */
+function getLifeLabel(v){if(v>=1e12)return{ico:'🌍',lbl:'Bisa beli pulau 😱'};if(v>=5e9)return{ico:'🏰',lbl:'Tajir melintir'};if(v>=1e9)return{ico:'🏠',lbl:'Miliarder!'};if(v>=500e6)return{ico:'🚘',lbl:'Kelas atas'};if(v>=200e6)return{ico:'📈',lbl:'Finansial bebas'};if(v>=100e6)return{ico:'🧘',lbl:'Napas lega'};if(v>=50e6)return{ico:'😊',lbl:'Di atas rata-rata'};return{ico:'🌱',lbl:'Keep growing!'};}
+function buildTimeline(modal,rates,pm,pajak){
+  const scroll=document.getElementById('timelineScroll');scroll.innerHTML='';scroll.scrollLeft=0;
+  const ageNow=S.profile?.age||25,avgR=rates.reduce((a,b)=>a+b,0)/rates.length;
+  [1,2,3,5,7,10,15,20,25,30].forEach(y=>{
+    const{final}=yearlyVals(modal,Array(y).fill(avgR),pm,pajak,S.cat),ll=getLifeLabel(final),p=gp();
+    const card=document.createElement('div');card.className='tl-card';
+    card.style.cssText=`border-color:${y===5||y===10?`rgba(${p?.rgb||'0,122,255'},.25)`:'transparent'}`;
+    card.innerHTML=`<div class="tl-year">${new Date().getFullYear()+y}</div><div class="tl-age">Usia ${ageNow+y} thn</div><span class="tl-ico">${ll.ico}</span><div class="tl-val">${rpS(final)}</div><div class="tl-label">${ll.lbl}</div>`;
+    scroll.appendChild(card);
+  });
+}
+
+/* ANALOGI */
+function computeAnalogi(untung,p){
+  const card=document.getElementById('analogiCard');
+  if(untung<10000){card.style.display='none';return;}
+  card.style.display='block';
+  document.getElementById('anaTagline').textContent=`Dengan keuntungan ${rpS(untung)}, lo bisa:`;
+  const items=ITEMS.filter(i=>untung>=i.p).sort((a,b)=>b.p-a.p).slice(0,4);
+  if(!items.length){card.style.display='none';return;}
+  document.getElementById('anaGrid').innerHTML=items.map(i=>`<div class="ana-item"><span class="ana-e">${i.e}</span><div><div class="ana-c">×${Math.floor(untung/i.p)}</div><div class="ana-l">${i.l}</div></div></div>`).join('');
+}
+
+/* VIBE */
+function computeVibe(p,realRet,pct,tahun,dca,pajak){
+  let score=50,checks=[];
+  if(realRet>0){score+=20;checks.push({t:'ok',m:`Beat inflasi +${realRet.toFixed(1)}%/thn 🏆`});}else{score-=20;checks.push({t:'bad',m:`Kalah inflasi ${realRet.toFixed(1)}%/thn ⚠️`});}
+  if(tahun>=5){score+=15;checks.push({t:'ok',m:'Horizon 5+ tahun: compound interest makin dahsyat 📈'});}else if(tahun>=3){score+=5;checks.push({t:'warn',m:'Horizon 3 thn: lumayan, tapi makin lama makin bagus'});}else{score-=10;checks.push({t:'bad',m:'Horizon <3 thn: compound belum optimal 😬'});}
+  if(dca){score+=15;checks.push({t:'ok',m:'DCA aktif: cara paling pintar invest konsisten ✅'});}else{checks.push({t:'warn',m:'Coba aktifkan DCA dari slider Gaji di atas!'});}
+  if(p.risk==='Rendah'){score+=10;checks.push({t:'ok',m:'Risiko rendah: tidur nyenyak malam ini 😴'});}else if(p.risk==='Tinggi'){checks.push({t:'warn',m:'Risiko tinggi: pastikan lo punya dana darurat dulu!'});}
+  score=Math.min(100,Math.max(0,score));
+  const offset=150-(150*score/100),col=score>=70?'var(--green)':score>=40?'var(--orange)':'var(--red)';
+  document.getElementById('vibeCircle').style.strokeDashoffset=offset;document.getElementById('vibeCircle').style.stroke=col;document.getElementById('vibeNum').textContent=score;
+  let emoji,verdict,sub;
+  if(score>=80){emoji='🔥';verdict='Strategi Lo FIRE!';sub='Portfolio ini solid banget. Keep it up!';}
+  else if(score>=60){emoji='💪';verdict='Lumayan Oke!';sub='Bagus, masih ada ruang untuk improve.';}
+  else if(score>=40){emoji='🤔';verdict='Perlu Diperbaiki';sub='Adjust durasi atau coba instrumen yang lebih optimal.';}
+  else{emoji='😬';verdict='Perlu Rethink';sub='Strategi ini kurang optimal. Yuk evaluasi ulang!';}
+  document.getElementById('vibeEmoji').textContent=emoji;document.getElementById('vibeVerdict').textContent=verdict;document.getElementById('vibeSub').textContent=sub;
+  document.getElementById('vibeChecks').innerHTML=checks.map(c=>`<div class="vc-row"><div class="vc-dot vc-${c.t}">${c.t==='ok'?'✓':c.t==='warn'?'!':'✗'}</div><span>${c.m}</span></div>`).join('');
+}
+
+/* INSIGHT */
+function computeInsight(p,avgNeto,realRet,pct,kali,final,modal,tot,tahun,infRate,pajak,dca,dcaAmt){
+  const tips=[];
+  if(realRet>5)tips.push(`📈 Return riil <strong>+${realRet.toFixed(1)}%/thn</strong> di ${p.name} — di atas rata-rata. Well done!`);
+  else if(realRet<0)tips.push(`⚠️ Return masih kalah inflasi ${(infRate*100).toFixed(1)}%/thn. Pertimbangkan instrumen dengan potensi lebih tinggi.`);
+  if(tahun>=10)tips.push(`⏰ ${tahun} tahun adalah waktu yang luar biasa untuk compound interest bekerja. Nilai berlipat ${kali.toFixed(1)}×!`);
+  if(!dca&&modal<50e6)tips.push(`💡 Aktifkan DCA! Setor rutin ${rpS(modal*.05)}/bln saja bisa meningkatkan nilai akhir secara signifikan.`);
+  if(pajak&&S.cat==='p2p')tips.push(`🧾 Ingat: PPh Pasal 23 P2P Lending WAJIB dilaporkan di SPT Coretax. Simpan semua Bukti Potong dari platform!`);
+  if(S.cat==='deposito'&&tahun>3)tips.push(`🏦 Deposito aman tapi return terbatas. Untuk horizon ${tahun} tahun, pertimbangkan Reksa Dana atau SBN untuk return lebih tinggi.`);
+  if(S.cat==='reksadana')tips.push(`📊 Keunggulan tersembunyi: kenaikan NAB Reksa Dana bebas pajak! Tidak seperti deposito yang kena PPh 20%.`);
+  if(final>=1e9)tips.push(`🎉 Simulasi ini bawa lo ke <strong>${rpS(final)}</strong>. Possible — asal mulai sekarang dan konsisten!`);
+  if(kali>=3&&tahun<=10)tips.push(`🚀 ${kali.toFixed(1)}× dalam ${tahun} tahun itu impressive. Compound interest sedang bekerja keras untuk lo!`);
+  document.getElementById('insightBody').innerHTML=(tips.slice(0,4)||[`<div class="ins-item"><span class="ins-dot"></span><span>Terus simulasikan berbagai instrumen untuk temukan yang paling cocok buat lo!</span></div>`]).map(t=>`<div class="ins-item"><span class="ins-dot" style="background:rgb(${p.rgb})"></span><span>${t}</span></div>`).join('');
+}
+
+/* ZAKAT */
+function computeZakat(final,tahun){
+  const card=document.getElementById('zakatCard');
+  if(tahun<1||final<NISAB){card.style.display='none';return;}
+  card.style.display='block';
+  const p=gp(),goldPriceStr=`Rp ${(NISAB_GOLD_PER_G/1e6).toFixed(2)} Jt`;
+  const instrNama=p?.name||'investasi ini';
+
+  // Nisab penghasilan = nisab/12 per bulan (pendapat jumhur ulama kontemporer)
+  const nisabBulanan=NISAB/12;
+  const gajiKenaZakat=S.gaji>0&&S.gaji>nisabBulanan;
+  const zakatGajiBulanan=S.gaji*.025; // 2.5% per bulan, dibayar tiap gajian
+  const zakatGajiTahunan=S.gaji*12*.025;
+
+  // Zakat mal: 2.5% dari total nilai aset investasi, dibayar 1x setahun
+  const zakatMalTahunan=final*.025;
+  const zakatMalBulanan=zakatMalTahunan/12;
+
+  // Why text
+  document.getElementById('zakatWhy').innerHTML=
+    `<strong>Kenapa investasi di ${instrNama} kena zakat?</strong><br>
+Nilai akhir investasimu <strong style="color:var(--gold)">${rpS(final)}</strong> sudah melebihi nisab zakat mal
+sebesar <strong>${rp(NISAB)}</strong> (85 gram emas × ~${goldPriceStr}/gram).
+Menurut hukum Islam, harta yang sudah dimiliki selama minimal 1 tahun (haul)
+dan nilainya di atas nisab <em>wajib</em> dibayarkan zakatnya setiap tahun.
+Ini bukan beban — ini cara harta kita "dibersihkan" dan membantu sesama. 🤲`;
+
+  document.getElementById('zakatNisab').innerHTML=
+    `Nisab Mar 2026: <strong style="color:var(--teal)">${rp(NISAB)}</strong>
+(85g emas × ~${goldPriceStr}/gram) ·
+Nilai aset kamu <strong>${rpS(final)}</strong> → <strong>melewati nisab, wajib zakat 🕌</strong>`;
+
+  // Build zakat types — always show Mal, show Penghasilan only if eligible
+  let types = [];
+
+  // 1. Zakat Mal (always shown since final >= NISAB)
+  types.push({
+    name:'Zakat Mal',
+    per:'dibayar 1× per tahun',
+    amt:zakatMalTahunan,
+    amtBln:zakatMalBulanan,
+    desc:`<strong>Dasar:</strong> 2.5% × total nilai aset investasi.<br>
+Nilai aset simulasi: <strong>${rpS(final)}</strong> → Zakat: <strong>${rp(zakatMalTahunan)}/tahun</strong>
+(atau dicicil <strong>${rp(zakatMalBulanan)}/bln</strong>).<br>
+Wajib dibayar tiap tahun (haul) selama nilai masih > nisab.
+Berlaku untuk deposito, obligasi, reksa dana, saham, P2P, dll.`,
+    show:true,
+  });
+
+  // 2. Zakat Penghasilan — only if gaji > nisab/12
+  if(gajiKenaZakat){
+    types.push({
+      name:'Zakat Penghasilan (Profesi)',
+      per:'dibayar tiap bulan saat gajian',
+      amt:zakatGajiBulanan,
+      amtBln:null,
+      desc:`<strong>Dasar:</strong> 2.5% × penghasilan per bulan.<br>
+Gaji ${rpS(S.gaji)}/bln > nisab bulanan ${rp(nisabBulanan)} → <strong>wajib zakat penghasilan</strong>.<br>
+Zakat: <strong>${rp(zakatGajiBulanan)}/bln</strong> (${rp(zakatGajiTahunan)}/tahun).<br>
+Idealnya langsung dipotong saat gajian — bisa otomatis via aplikasi BAZNAS.`,
+      show:true,
+    });
+  }
+
+  document.getElementById('zakatTypes').innerHTML=types.map(t=>`
+    <div class="zakat-type-item">
+      <div class="zt-head">
+        <div>
+          <span class="zt-name">${t.name}</span>
+          <div style="font-size:.58rem;color:var(--teal);font-weight:600;margin-top:2px">${t.per}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="zt-amt">${rp(t.amt)}</div>
+          ${t.amtBln?`<div style="font-size:.6rem;color:var(--t3)">≈ ${rp(t.amtBln)}/bln</div>`:''}
+        </div>
+      </div>
+      <div class="zt-desc">${t.desc}</div>
+    </div>`).join('');
+}
+
+/* SHARE */
+function shareResult(){
+  const p=gp();if(!p)return;
+  const{modal,tahun,dca,dcaAmt,pajak,infRate}=S,pm=dca?dcaAmt:0;
+  const{tot,final}=yearlyVals(modal,getRates(p,tahun),pm,pajak,S.cat);
+  const pct=((final-tot)/tot)*100,avgR=getRates(p,tahun).reduce((a,b)=>a+b,0)/tahun;
+  const avgN=pajak?avgR*taxMult(S.cat):avgR,realR=((1+avgN)/(1+infRate)-1)*100;
+  const txt=`💰 InvestCalc by Yudha · Mar 2026\n${'─'.repeat(28)}\nInstrumen : ${p.name} (${p.rl}${p.rl!=='Acak'?' p.a.':''})\nModal     : ${rp(modal)}\nDurasi    : ${tahun} Tahun${dca?`\nDCA/bln   : ${rp(dcaAmt)}`:''}\n${'─'.repeat(28)}\nNilai Akhir: ${rp(final)}\nKeuntungan : ${rp(final-tot)} (${pct>=0?'+':''}${pct.toFixed(2)}%)\nvs Inflasi : ${realR>=0?'+':''}${realR.toFixed(2)}% riil\nStatus     : ${realR>0?'✅ Beat inflasi!':'⚠ Kalah inflasi'}`;
+  navigator.clipboard.writeText(txt).then(()=>toast('📋 Disalin! Flex ke temen 💪')).catch(()=>toast('⚠ Gagal nyalin'));
+}
+
+/* TOAST */
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
+
+/* CONFETTI */
+let cfP=[],cfAF=null;
+function launchConfetti(){
+  const cv=document.getElementById('cfCv');cv.width=window.innerWidth;cv.height=window.innerHeight;
+  const ctx=cv.getContext('2d'),cols=['#007aff','#34c759','#ff9f0a','#ff375f','#bf5af2','#5ac8fa','#ffd60a'];
+  cfP=Array.from({length:110},()=>({x:Math.random()*cv.width,y:-10-Math.random()*80,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:3+Math.random()*6,color:cols[~~(Math.random()*cols.length)],rot:Math.random()*360,vr:(Math.random()-.5)*9,alpha:1,shape:Math.random()>.5?'rect':'circle'}));
+  cv.classList.add('show');if(cfAF)cancelAnimationFrame(cfAF);
+  function draw(){ctx.clearRect(0,0,cv.width,cv.height);let alive=false;cfP.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.rot+=p.vr;if(p.y>cv.height*.7)p.alpha=Math.max(0,p.alpha-.022);if(p.alpha>0)alive=true;ctx.save();ctx.globalAlpha=p.alpha;ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.color;if(p.shape==='circle')ctx.beginPath(),ctx.arc(0,0,p.r,0,Math.PI*2),ctx.fill();else ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.5);ctx.restore();});if(alive)cfAF=requestAnimationFrame(draw);else{cv.classList.remove('show');ctx.clearRect(0,0,cv.width,cv.height);}}
+  draw();setTimeout(()=>{cv.classList.remove('show');if(cfAF)cancelAnimationFrame(cfAF);},3800);
+}
+
+function showTaxModal(){document.getElementById('taxOverlay').classList.add('open');}
+
+/* ══ FITUR 1: FIRE CALCULATOR ══ */
+function openFire(){
+  document.getElementById('fireOverlay').classList.add('open');
+  ['fireExp','fireAge','fireRet'].forEach(id=>{const el=document.getElementById(id);if(el){fillSlider(el);}});
+  computeFire();
+  document.getElementById('fireExp').oninput=function(){fillSlider(this);document.getElementById('fireExpDisplay').textContent=rpS(+this.value);computeFire();};
+  document.getElementById('fireAge').oninput=function(){fillSlider(this);document.getElementById('fireAgeDisplay').textContent=this.value+' thn';computeFire();};
+  document.getElementById('fireRet').oninput=function(){fillSlider(this);document.getElementById('fireRetDisplay').textContent=this.value+'%';computeFire();};
+}
+function computeFire(){
+  const exp=+document.getElementById('fireExp').value,age=+document.getElementById('fireAge').value,ret=(+document.getElementById('fireRet').value)/100;
+  const target=(exp*12)/0.04,passiveIncome=target*ret/12;
+  let cur=S.modal,yrs=0;const pm=S.dca?S.dcaAmt:0;
+  while(cur<target&&yrs<60){const rm=Math.pow(1+ret,1/12)-1;cur=cur*(1+ret)+(pm>0&&rm>0?pm*(Math.pow(1+rm,12)-1)/rm:pm*12);yrs++;}
+  document.getElementById('fireTarget').textContent=rpS(target);
+  document.getElementById('fireSub').innerHTML=`Passive income: <strong>${rpS(passiveIncome)}/bln</strong> — cukup hidup seumur hidup tanpa kerja (4% rule)`;
+  document.getElementById('fireGrid').innerHTML=`
+    <div class="fire-stat"><div class="fire-stat-val">${yrs<=60?yrs+' thn':'> 60 thn'}</div><div class="fire-stat-lbl">Waktu dari modal & DCA saat ini</div></div>
+    <div class="fire-stat"><div class="fire-stat-val">${yrs<=60?new Date().getFullYear()+yrs:'—'}</div><div class="fire-stat-lbl">Estimasi tahun pensiun dini</div></div>
+    <div class="fire-stat"><div class="fire-stat-val">${yrs<=60?age+yrs+' thn':'—'}</div><div class="fire-stat-lbl">Usia lo saat FIRE tercapai</div></div>
+    <div class="fire-stat"><div class="fire-stat-val">${rpS(passiveIncome)}</div><div class="fire-stat-lbl">Passive income/bln dari FIRE</div></div>`;
+}
+
+/* ══ FITUR 2: COMPARE ══ */
+function openCompare(){
+  document.getElementById('compareOverlay').classList.add('open');
+  const{modal,tahun,dca,dcaAmt,pajak}=S,pm=dca?dcaAmt:0,results=[];
+  Object.entries(CAT).forEach(([catId,cat])=>{cat.prods.forEach(p=>{if(p.vol)return;const{final}=yearlyVals(modal,Array(tahun).fill(p.rate||.12),pm,pajak,catId);results.push({catId,p,final});});});
+  results.sort((a,b)=>b.final-a.final);const maxF=results[0]?.final||1;
+  document.getElementById('compareList').innerHTML=results.slice(0,10).map((r,i)=>`<div class="cmp-item${i===0?' cmp-best':''}" onclick="setFromCompare('${r.catId}','${r.p.id}')">
+    <div class="cmp-rank${i===0?' gold':''}">${i+1}</div>
+    <div class="cmp-info"><div class="cmp-name">${CAT[r.catId].icon} ${r.p.name}</div><div class="cmp-rate">${r.p.rl}${r.p.rl!=='Acak'?' p.a.':''} · ${CAT[r.catId].label}</div></div>
+    <div class="cmp-bar-wrap"><div class="cmp-bar" style="width:${Math.round(r.final/maxF*100)}%;background:rgb(${r.p.rgb})"></div><div class="cmp-val" style="color:rgb(${r.p.rgb})">${rpS(r.final)}</div></div>
+  </div>`).join('');
+}
+function setFromCompare(cat,pid){S.cat=cat;S.pid=pid;renderCats();renderExp();renderGrid();compute();document.getElementById('compareOverlay').classList.remove('open');toast('✅ Diset ke '+gp()?.name);}
+
+/* ══ FITUR 3: INFLASI KALKULATOR ══ */
+function openInflasiCalc(){
+  document.getElementById('inflKalcOverlay').classList.add('open');
+  ['ikalcVal','ikalcThn','ikalcInf'].forEach(id=>{const el=document.getElementById(id);if(el)fillSlider(el);});
+  computeInflasiCalc();
+  document.getElementById('ikalcVal').oninput=function(){fillSlider(this);document.getElementById('ikalcValDisplay').textContent=rpS(+this.value);computeInflasiCalc();};
+  document.getElementById('ikalcThn').oninput=function(){fillSlider(this);document.getElementById('ikalcThnDisplay').textContent=this.value+' thn';computeInflasiCalc();};
+  document.getElementById('ikalcInf').oninput=function(){fillSlider(this);document.getElementById('ikalcInfDisplay').textContent=(+this.value).toFixed(2)+'%';computeInflasiCalc();};
+}
+function computeInflasiCalc(){
+  const val=+document.getElementById('ikalcVal').value,thn=+document.getElementById('ikalcThn').value,inf=(+document.getElementById('ikalcInf').value)/100;
+  const futureEquiv=val*Math.pow(1+inf,thn);
+  const realVal=val/Math.pow(1+inf,thn);
+  document.getElementById('ikalcBig').textContent=rp(realVal);
+  document.getElementById('ikalcSub').innerHTML=`${rp(val)} sekarang = <strong>${rp(realVal)}</strong> daya belinya dalam ${thn} tahun (inflasi ${(inf*100).toFixed(2)}%/thn).<br>Atau sebaliknya: untuk beli barang seharga ${rp(val)} di ${thn} tahun lagi, lo butuh uang <strong>${rp(futureEquiv)}</strong> saat itu.`;
+  const p=gp();if(p&&p.rate){
+    const investResult=val*Math.pow(1+p.rate,thn);
+    const profit=investResult-val;
+    document.getElementById('ikalcInvestAlt').innerHTML=`✅ <strong>Kalau lo investasikan ${rp(val)} di ${p.name} (${p.rl}/thn) selama ${thn} tahun?</strong><br>Nilainya jadi <strong style="color:var(--green)">${rp(investResult)}</strong> (+${rp(profit)}) — jauh lebih baik dari didiamkan! Ini kenapa investasi itu penting.`;
+  }
+}
+
+/* ══ FITUR 4: SIMULASI SKENARIO ══ */
+function openSkenario(){
+  document.getElementById('skenarioOverlay').classList.add('open');
+  computeSkenario();
+}
+function computeSkenario(){
+  const p=gp();if(!p){document.getElementById('skenGrid').innerHTML='<div style="text-align:center;padding:20px;font-size:.8rem;color:var(--t3)">Pilih instrumen dulu di halaman utama 👆</div>';return;}
+  const{modal,tahun,dca,dcaAmt,pajak}=S,pm=dca?dcaAmt:0;
+  const baseRate=p.rate||(p.vol?.12:.12);
+  const scenarios=[
+    {label:'🟢 Optimis',cls:'best',rate:baseRate*1.5,desc:`Return ${(baseRate*1.5*100).toFixed(1)}%/thn — kondisi terbaik, pasar sedang bagus`},
+    {label:'🔵 Normal',cls:'base',rate:baseRate,desc:`Return ${(baseRate*100).toFixed(1)}%/thn — ekspektasi rata-rata historis`},
+    {label:'🔴 Pesimis',cls:'worst',rate:baseRate*0.5,desc:`Return ${(baseRate*0.5*100).toFixed(1)}%/thn — kondisi pasar buruk atau krisis`},
+  ];
+  document.getElementById('skenGrid').innerHTML=scenarios.map(sc=>{
+    const{final,tot}=yearlyVals(modal,Array(tahun).fill(sc.rate),pm,pajak,S.cat);
+    const pct=((final-tot)/tot)*100;
+    return`<div class="sken-item ${sc.cls}">
+      <div class="sken-label" style="color:${sc.cls==='best'?'var(--green)':sc.cls==='base'?'var(--blue)':'var(--red)'}">${sc.label}</div>
+      <div class="sken-val">${rpS(final)}</div>
+      <div class="sken-sub">${pct>=0?'+':''}${pct.toFixed(1)}% total · ${sc.desc}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('skenNote').textContent=`Simulasi 3 skenario untuk ${p.name} dengan modal ${rp(modal)} selama ${tahun} tahun. Skenario optimis dan pesimis menggunakan 1.5× dan 0.5× dari return normal sebagai ilustrasi. Return masa lalu bukan jaminan masa depan.`;
+}
+
+/* ══ FITUR 5: GLOSARIUM ══ */
+function openGlosarium(){
+  document.getElementById('glosariumOverlay').classList.add('open');
+  document.getElementById('gloSearch').value='';
+  renderGlossary(GLOSARIUM);
+}
+function filterGlo(q){
+  const filtered=q?GLOSARIUM.filter(g=>g.term.toLowerCase().includes(q.toLowerCase())||g.def.toLowerCase().includes(q.toLowerCase())):GLOSARIUM;
+  renderGlossary(filtered);
+}
+function renderGlossary(list){
+  document.getElementById('gloList').innerHTML=list.length?list.map(g=>`<div class="glo-item"><div class="glo-term">${g.term}</div><div class="glo-def">${g.def}</div><div class="glo-ex">💡 ${g.ex}</div></div>`).join(''):'<div style="text-align:center;padding:20px;font-size:.8rem;color:var(--t3)">Tidak ada hasil untuk pencarian ini.</div>';
+}
+
+/* ══ FITUR 6: REBALANCING CHECKER ══ */
+const REB_CATS=[{id:'deposito',name:'🏦 Deposito'},{id:'obligasi',name:'📜 Obligasi/SBN'},{id:'reksadana',name:'📊 Reksa Dana'},{id:'p2p',name:'🤝 P2P Lending'},{id:'saham',name:'📈 Saham'}];
+function openRebalance(){
+  document.getElementById('rebalanceOverlay').classList.add('open');
+  document.getElementById('rebResult').style.display='none';
+  document.getElementById('rebAlloc').innerHTML=REB_CATS.map(c=>`
+    <div class="reb-row">
+      <span class="reb-name">${c.name}</span>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="font-size:.68rem;color:var(--t3)">Target</span>
+        <input class="reb-input" id="rebT_${c.id}" type="number" min="0" max="100" value="0" placeholder="0">
+        <span class="reb-pct">%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;margin-left:6px">
+        <span style="font-size:.68rem;color:var(--t3)">Aktual</span>
+        <input class="reb-input" id="rebA_${c.id}" type="number" min="0" max="100" value="0" placeholder="0">
+        <span class="reb-pct">%</span>
+      </div>
+    </div>`).join('');
+  // Pre-fill with current profile suggestion
+  const risk=S.profile?.risk||'mid';
+  const alloc=SUGGEST_ALLOC[risk];
+  const totals={deposito:0,obligasi:0,reksadana:0,p2p:0,saham:0};
+  alloc.forEach(a=>{totals[a.cat]=(totals[a.cat]||0)+a.pct;});
+  REB_CATS.forEach(c=>{const el=document.getElementById(`rebT_${c.id}`);if(el)el.value=totals[c.id]||0;});
+}
+function checkRebalance(){
+  const results=REB_CATS.map(c=>{
+    const target=+document.getElementById(`rebT_${c.id}`).value||0;
+    const actual=+document.getElementById(`rebA_${c.id}`).value||0;
+    const diff=actual-target;
+    return{name:c.name,target,actual,diff};
+  });
+  const totalT=results.reduce((s,r)=>s+r.target,0),totalA=results.reduce((s,r)=>s+r.actual,0);
+  if(Math.abs(totalT-100)>1){toast('⚠️ Total target harus 100%! Sekarang: '+totalT+'%');return;}
+  if(totalA>0&&Math.abs(totalA-100)>1){toast('⚠️ Total aktual harus 100%! Sekarang: '+totalA+'%');return;}
+  const el=document.getElementById('rebResult');el.style.display='flex';
+  el.innerHTML=results.filter(r=>r.target>0||r.actual>0).map(r=>{
+    const abs=Math.abs(r.diff),cls=abs<=2?'ok':r.diff>0?'over':'under';
+    const action=abs<=2?'✅ Seimbang':r.diff>2?`⬇️ Kurangi ${r.diff.toFixed(1)}%`:` ⬆️ Tambah ${abs.toFixed(1)}%`;
+    const color=cls==='ok'?'var(--green)':cls==='over'?'var(--red)':'var(--blue)';
+    return`<div class="reb-res-item ${cls}"><div><div class="reb-res-name">${r.name}</div><div style="font-size:.65rem;color:var(--t2);margin-top:2px">Target: ${r.target}% · Aktual: ${r.actual}%</div></div><div class="reb-res-action" style="color:${color}">${action}</div></div>`;
+  }).join('');
+}
+
+/* ══ FITUR 7: NAB / DCA KALKULATOR ══ */
+function openNabCalc(){
+  document.getElementById('nabCalcOverlay').classList.add('open');
+  ['nabAmt','nabThn','nabRet'].forEach(id=>{const el=document.getElementById(id);if(el)fillSlider(el);});
+  computeNabCalc();
+  document.getElementById('nabAmt').oninput=function(){fillSlider(this);document.getElementById('nabAmtDisplay').textContent=rpS(+this.value);computeNabCalc();};
+  document.getElementById('nabThn').oninput=function(){fillSlider(this);document.getElementById('nabThnDisplay').textContent=this.value+' thn';computeNabCalc();};
+  document.getElementById('nabRet').oninput=function(){fillSlider(this);document.getElementById('nabRetDisplay').textContent=(+this.value)+'%';computeNabCalc();};
+}
+function computeNabCalc(){
+  const amt=+document.getElementById('nabAmt').value,thn=+document.getElementById('nabThn').value,ret=(+document.getElementById('nabRet').value)/100;
+  const n=thn*12,rm=Math.pow(1+ret,1/12)-1;
+  const fv=rm>0?amt*(Math.pow(1+rm,n)-1)/rm:amt*n;
+  const totalSetor=amt*n,profit=fv-totalSetor;
+  document.getElementById('nabBig').textContent=rpS(fv);
+  document.getElementById('nabSub').innerHTML=`Total setor: <strong>${rp(totalSetor)}</strong> (Rp ${rpS(amt)}/bln × ${thn} thn)<br>Profit dari bunga/return: <strong style="color:var(--green)">+${rp(profit)}</strong> (${((profit/totalSetor)*100).toFixed(1)}% dari modal)<br><br>💡 Uang kerja keras buat lo! ${rp(profit)} extra hanya dengan DCA konsisten.`;
+}
+
+/* ONBOARDING */
+let selectedRisk=null;
+function showOnboarding(){selectedRisk=null;renderObProfiles();document.getElementById('obOverlay').classList.remove('done');}
+function renderObProfiles(){
+  const risks=['low','mid','high'];
+  document.getElementById('obProfiles').innerHTML=risks.map(r=>{
+    const p=PROFILE_DETAILS[r];
+    const detailLines=p.detail.split('\n').map(l=>`<div style="display:flex;gap:5px;margin-bottom:2px"><span style="flex-shrink:0">${l.split(' ')[0]}</span><span>${l.split(' ').slice(1).join(' ')}</span></div>`).join('');
+    return`<div class="ob-prof-card${selectedRisk===r?' sel':''}" onclick="selectProfile('${r}')">
+      <div class="ob-prof-top"><span class="ob-prof-emoji">${p.emoji}</span><div><div class="ob-prof-name">${p.name}</div><span class="ob-prof-tag" style="color:${p.tagColor};background:${p.tagBg};border:1px solid ${p.tagColor}40">${p.tag}</span></div></div>
+      <div class="ob-prof-desc">${p.desc}</div>
+      <div class="ob-prof-detail">${detailLines}</div>
+      <div class="ob-prof-instruments">${p.instruments.map(i=>`<span class="ob-prof-inst">${i}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('obProfiles').innerHTML+=`<button class="ob-start-btn${selectedRisk?' ready':''}" id="obStartBtn" onclick="finishOnboarding()">Mulai Simulasi 🚀</button>`;
+}
+function selectProfile(risk){
+  selectedRisk=risk;
+  document.querySelectorAll('.ob-prof-card').forEach((c,i)=>c.classList.toggle('sel',['low','mid','high'][i]===risk));
+  const btn=document.getElementById('obStartBtn');if(btn)btn.classList.add('ready');
+}
+function finishOnboarding(){
+  if(!selectedRisk){toast('Pilih profil dulu ya 😊');return;}
+  const det=PROFILE_DETAILS[selectedRisk],prof=PROFILES[selectedRisk];
+  S.profile={risk:selectedRisk,age:25,goal:'grow'};
+  document.getElementById('obOverlay').classList.add('done');
+  const pb=document.getElementById('profileBar');pb.classList.remove('hidden');
+  document.getElementById('pbIcon').textContent=det.emoji;
+  document.getElementById('pbName').textContent=det.emoji+' '+det.name+' — '+det.tag;
+  document.getElementById('pbRec').textContent='Cocok: '+det.instruments.join(' · ')+' · Tap untuk ubah';
+  if(det.cats.length>0){S.cat=det.cats[0];S.pid=CAT[S.cat].prods[0].id;renderCats();renderExp();renderGrid();compute();}
+}
+
+/* EVENTS */
+document.getElementById('sModal').addEventListener('input',function(){S.modal=+this.value;fillSlider(this);flashVal('vModal',rpS(S.modal));compute();});
+document.getElementById('sTahun').addEventListener('input',function(){S.tahun=+this.value;fillSlider(this);flashVal('vTahun',S.tahun+' Tahun');compute();});
+document.getElementById('sDCA').addEventListener('input',function(){S.dcaAmt=+this.value;fillSlider(this);flashVal('vDCA',rpS(S.dcaAmt));compute();});
+document.getElementById('tDCA').addEventListener('change',function(){S.dca=this.checked;document.getElementById('dcaPanel').className='coll'+(S.dca?' open':'');compute();});
+document.getElementById('tInflasi').addEventListener('change',function(){S.inflasi=this.checked;compute();});
+document.getElementById('tPajak').addEventListener('change',function(){S.pajak=this.checked;compute();});
+document.getElementById('tgtCustom').addEventListener('input',function(){const v=parseInt(this.value.replace(/\D/g,''))||0;if(v>0){S.tgtPrice=v;S.tgtLabel='🎯 Custom';document.querySelectorAll('.tgt-chip').forEach(x=>x.classList.remove('on'));compute();}});
+document.getElementById('sGaji').addEventListener('input',function(){S.gaji=+this.value;fillSlider(this);flashVal('vGaji',rpS(S.gaji));renderSalary();});
+
+/* INIT */
+function init(){
+  [document.getElementById('sModal'),document.getElementById('sTahun'),document.getElementById('sDCA'),document.getElementById('sGaji')].forEach(fillSlider);
+  initChart();renderCats();renderExp();renderGrid();renderTargets();renderSalary();renderCarabeli();
+  compute();fetchLiveRates();showOnboarding();
+}
+init();
+</script>
+</body>
+</html>
